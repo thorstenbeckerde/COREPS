@@ -188,10 +188,11 @@
                  <div class="dropdown">
                     <button class="btn btn-secondary">Export</button>
                     <div class="dropdown-content">
-                        <button id="exportTxtBtn">TXT</button>
+                        <button id="exportTxtBtn">Simple TXT</button>
+                        <button id="exportNarrativeTxtBtn">Narrative TXT</button>
                         <button id="exportJsonBtn">JSON</button>
-                        <button id="exportYarnBtn">Yarn Spinner</button>
-                        <button id="exportTweeBtn">Twee (Twine)</button>
+                        <button id="exportYarnBtn">Yarn Spinner (.yarn)</button>
+                        <button id="exportTweeBtn">Twee (.twee)</button>
                     </div>
                 </div>
                 <button id="saveBtn" class="btn btn-secondary" title="Save to File (Ctrl/Cmd+S)">Save</button>
@@ -448,6 +449,7 @@
         const noteCanvasContainer = document.getElementById('noteCanvasContainer'); const mainContent = document.getElementById('mainContent'); const transformContainer = document.getElementById('transformContainer'); const svgCanvas = document.getElementById('svgCanvas'); const noteCanvas = document.getElementById('noteCanvas'); const addChunkBtn = document.getElementById('addChunkBtn'); const templatesBtn = document.getElementById('templatesBtn'); const templatesModal = document.getElementById('templatesModal'); const templateList = document.getElementById('templateList'); const clearCanvasBtn = document.getElementById('clearCanvasBtn'); const undoDeleteBtn = document.getElementById('undoDeleteBtn'); const chunkCountDisplay = document.getElementById('chunkCountDisplay'); const addChunkModal = document.getElementById('addChunkModal'); const chunkTypeSelect = document.getElementById('chunkTypeSelect'); const addChunkShapeSelect = document.getElementById('addChunkShapeSelect'); const addChunkColorSelect = document.getElementById('addChunkColorSelect'); const confirmAddChunkBtn = document.getElementById('confirmAddChunkBtn'); const cancelAddChunkBtn = document.getElementById('cancelAddChunkBtn'); const editChunkModal = document.getElementById('editChunkModal'); const editingChunkIdInput = document.getElementById('editingChunkId'); const editChunkTypeSelect = document.getElementById('editChunkTypeSelect'); const editChunkShapeSelect = document.getElementById('editChunkShapeSelect'); const editChunkColorSelect = document.getElementById('editChunkColorSelect'); const confirmEditChunkBtn = document.getElementById('confirmEditChunkBtn'); const cancelEditChunkBtn = document.getElementById('cancelEditChunkBtn'); const helpBtn = document.getElementById('helpBtn'); const helpModal = document.getElementById('helpModal'); const closeHelpBtn = document.getElementById('closeHelpBtn'); const closeHelpModalSpan = document.getElementById('closeHelpModalSpan'); const saveBtn = document.getElementById('saveBtn'); const loadBtn = document.getElementById('loadBtn'); const fileLoadInput = document.getElementById('fileLoadInput'); const messageModal = document.getElementById('messageModal'); const messageTitle = document.getElementById('messageTitle'); const messageText = document.getElementById('messageText'); const messageButtons = document.getElementById('messageButtons');
         const unlinkModal = document.getElementById('unlinkModal'); const unlinkList = document.getElementById('unlinkList'); const closeUnlinkModalBtn = document.getElementById('closeUnlinkModalBtn');
         const exportJsonBtn = document.getElementById('exportJsonBtn'); const exportYarnBtn = document.getElementById('exportYarnBtn'); const exportTweeBtn = document.getElementById('exportTweeBtn'); const exportTxtBtn = document.getElementById('exportTxtBtn');
+        const exportNarrativeTxtBtn = document.getElementById('exportNarrativeTxtBtn');
         const linkEditModal = document.getElementById('linkEditModal'); const linkEditTitle = document.getElementById('linkEditTitle'); const linkTypeSelect = document.getElementById('linkTypeSelect'); const linkLabelInput = document.getElementById('linkLabelInput'); const cancelLinkEditBtn = document.getElementById('cancelLinkEditBtn'); const confirmLinkEditBtn = document.getElementById('confirmLinkEditBtn'); const linkSourceIdInput = document.getElementById('linkSourceId'); const linkTargetIdInput = document.getElementById('linkTargetId');
         const saveCanvasAsTemplateBtn = document.getElementById('saveCanvasAsTemplateBtn'); const loadCustomTemplateBtn = document.getElementById('loadCustomTemplateBtn'); const templateLoadInput = document.getElementById('templateLoadInput');
         const settingsBtn = document.getElementById('settingsBtn'); const settingsModal = document.getElementById('settingsModal'); const closeSettingsModalBtn = document.getElementById('closeSettingsModalBtn'); const saveSettingsBtn = document.getElementById('saveSettingsBtn'); const geminiApiKeyInput = document.getElementById('geminiApiKeyInput');
@@ -741,8 +743,8 @@
             if (titleSpan) {
                 titleSpan.innerHTML = `
                     <div class="chunk-header-main">
-                        <span class="shape-icon" title="${shapeInfo.name}: ${shapeInfo.essence}">${shapeInfo.svg}</span>
                         <span class="chunk-color-symbol" title="${colorInfo.name}: ${colorInfo.essence}">${colorInfo.symbol}</span>
+                        <span class="shape-icon" title="${shapeInfo.name}: ${shapeInfo.essence}"><svg viewBox="0 0 14 14">${shapeInfo.svg}</svg></span>
                         <span>${chunkData.chunkTypeTag}</span>
                     </div>
                     <div class="chunk-functional-essence">${shapeInfo.essence}</div>
@@ -1076,6 +1078,54 @@
                 content = JSON.stringify({ chunks: chunks }, null, 2);
                 fileExt = 'json';
                 mimeType = 'application/json';
+            } else if (format === 'narrative-txt') {
+                fileExt = 'txt';
+                mimeType = 'text/plain;charset=utf-8';
+
+                const formatTypeTagForNarrative = (tag) => {
+                    const descriptiveText = tag.replace('#', '').replace(/-/g, ' ');
+                    const article = /^[aeiou]/i.test(descriptiveText) ? 'An' : 'A';
+                    return `${article} ${descriptiveText}.`;
+                };
+
+                chunks.forEach((chunk, index) => {
+                    const shapeInfo = SHAPES.find(s => s.name === chunk.shape) || { essence: 'not specified' };
+                    const colorInfo = COLORS.find(c => c.name === chunk.color) || { essence: 'not specified' };
+
+                    content += `--- SECTION ${index + 1} (${chunk.chunkTypeTag}) ---\n\n`;
+                    
+                    content += `${formatTypeTagForNarrative(chunk.chunkTypeTag)}\n\n`;
+                    
+                    content += `${cleanText(chunk.text)}\n\n`;
+
+                    content += `(This moment is perceived as a functional '${shapeInfo.essence.toLowerCase()}' with an emotional tone of '${colorInfo.essence.toLowerCase()}'.)\n\n`;
+
+                    if (chunk.links && chunk.links.length > 0) {
+                        content += 'From here, the story continues:\n';
+                        chunk.links.forEach(link => {
+                            const target = chunksMap.get(link.targetId);
+                            const linkTypeInfo = LINK_TYPES.find(lt => lt.type === link.type) || { label: link.type };
+                            
+                            let linkDescription = link.label || linkTypeInfo.label;
+
+                            if (target) {
+                                // Find the index of the target chunk for section numbering
+                                const targetIndex = chunks.findIndex(c => c.id === target.id);
+                                if (targetIndex !== -1) {
+                                    content += `  - ${linkDescription}. (Continue to SECTION ${targetIndex + 1})\n`;
+                                } else {
+                                    content += `  - ${linkDescription}, but the destination is missing.\n`;
+                                }
+                            } else {
+                                 content += `  - ${linkDescription}, leading to an unknown destination.\n`;
+                            }
+                        });
+                        content += `\n`;
+                    } else {
+                        content += 'This is the end of this path.\n\n';
+                    }
+                    content += `------------------------------------------\n\n`;
+                });
             } else if (format === 'yarn') {
                 fileExt = 'yarn';
                 chunks.forEach(chunk => {
@@ -1184,6 +1234,7 @@
             exportYarnBtn.addEventListener('click', () => exportTo('yarn'));
             exportTweeBtn.addEventListener('click', () => exportTo('twee'));
             exportTxtBtn.addEventListener('click', () => exportTo('txt'));
+            exportNarrativeTxtBtn.addEventListener('click', () => exportTo('narrative-txt'));
 
             saveCanvasAsTemplateBtn.addEventListener('click', saveCanvasAsTemplate);
             loadCustomTemplateBtn.addEventListener('click', () => templateLoadInput.click());
