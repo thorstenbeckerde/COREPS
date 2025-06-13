@@ -1,4 +1,4 @@
-# CHORUSPS
+# CHORUS Perceptual Storyteller
 A tool for mapping stories from an emotional and perceptual perspective
 This is a tool for mapping stories from an emotional and perceptual perspective. Instead of focusing on plot points, it helps you structure a narrative based on environmental cues, internal feelings, and shifts in a character's perception.
 
