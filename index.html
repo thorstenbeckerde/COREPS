@@ -20,6 +20,7 @@
         }
         .toolbar {
             flex-shrink: 0;
+            position: relative;
         }
         #mainContent {
             position: relative;
@@ -177,13 +178,24 @@
 <body class="bg-gray-100 text-gray-800">
     <div id="appContainer">
         <!-- Toolbar -->
-        <div class="toolbar p-3 bg-white shadow-md flex flex-wrap items-center justify-center sm:justify-between gap-x-4 gap-y-2 print:hidden">
+        <div class="toolbar p-3 bg-white shadow-md flex flex-col sm:flex-row items-center justify-center sm:justify-between gap-3 print:hidden">
             <!-- Left Group -->
             <div class="flex items-center flex-wrap justify-center gap-2">
-                <button id="addChunkBtn" class="btn btn-primary" title="Add Chunk (A)">Add Chunk</button>
+                <button id="addChunkBtn" class="btn btn-primary" title="Add Chunk (A)">Add</button>
                 <button id="templatesBtn" class="btn btn-secondary" title="Load a narrative template">Templates</button>
                 <button id="clearCanvasBtn" class="btn btn-danger" title="Clear Canvas">Clear</button>
                 <button id="undoDeleteBtn" class="btn btn-secondary" title="Undo Last Delete (Ctrl/Cmd+Z)" disabled>Undo</button>
+            </div>
+
+            <!-- Center Group (Zoom) -->
+            <div class="flex items-center justify-center gap-1">
+                 <button id="zoomOutBtn" class="btn btn-secondary !p-2" title="Zoom Out (-)">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M20 12H4" /></svg>
+                 </button>
+                 <button id="zoomResetBtn" class="btn btn-secondary" title="Reset Zoom (100%)">100%</button>
+                 <button id="zoomInBtn" class="btn btn-secondary !p-2" title="Zoom In (+)">
+                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m6-6H6" /></svg>
+                 </button>
             </div>
 
             <!-- Right Group -->
@@ -207,9 +219,9 @@
                 </div>
                 <button id="saveBtn" class="btn btn-secondary" title="Save to File (Ctrl/Cmd+S)">Save</button>
                 <button id="loadBtn" class="btn btn-secondary" title="Load from File (Ctrl/Cmd+O)">Load</button>
-                 <a href="https://ko-fi.com/thorstenbecker" target="_blank" rel="noopener noreferrer" class="btn btn-donate">$ Donate</a>
                 <button id="settingsBtn" class="btn btn-secondary" title="Settings">Settings</button>
                 <button id="helpBtn" class="btn btn-secondary" title="Help (?)">Help</button>
+                <a href="https://ko-fi.com/thorstenbecker" target="_blank" rel="noopener noreferrer" class="btn btn-donate">$ Donate</a>
             </div>
         </div>
 
@@ -243,7 +255,7 @@
             <select id="addChunkColorSelect" class="form-select"></select>
             <div class="mt-6 flex justify-end">
                 <button id="cancelAddChunkBtn" class="btn btn-secondary">Cancel</button>
-                <button id="confirmAddChunkBtn" class="btn btn-primary">Add Chunk</button>
+                <button id="confirmAddChunkBtn" class="btn btn-primary">Add</button>
             </div>
         </div>
     </div>
@@ -468,6 +480,7 @@
         const saveCanvasAsTemplateBtn = document.getElementById('saveCanvasAsTemplateBtn'); const loadCustomTemplateBtn = document.getElementById('loadCustomTemplateBtn'); const templateLoadInput = document.getElementById('templateLoadInput');
         const settingsBtn = document.getElementById('settingsBtn'); const settingsModal = document.getElementById('settingsModal'); const closeSettingsModalBtn = document.getElementById('closeSettingsModalBtn'); const saveSettingsBtn = document.getElementById('saveSettingsBtn'); const geminiApiKeyInput = document.getElementById('geminiApiKeyInput');
         const aiActionModal = document.getElementById('aiActionModal'); const aiActionDeepenBtn = document.getElementById('aiActionDeepenBtn'); const aiActionInternalStateBtn = document.getElementById('aiActionInternalStateBtn'); const aiActionSuggestEchoBtn = document.getElementById('aiActionSuggestEchoBtn');
+        const zoomInBtn = document.getElementById('zoomInBtn'); const zoomOutBtn = document.getElementById('zoomOutBtn'); const zoomResetBtn = document.getElementById('zoomResetBtn');
 
         // --- App State ---
         let chunkTypes = {}; let allChunkTypesList = []; let chunks = []; let chunksMap = new Map();
@@ -529,7 +542,7 @@
 
         function populateAddChunkModal() { 
             populateSelectWithOptions(chunkTypeSelect, null, null, chunkTypes, key => key.charAt(0).toUpperCase() + key.slice(1) + " Types"); 
-            populateSelectWithOptions(addChunkShapeSelect, SHAPES.map(s => ({value: s.name, text: `${s.symbol} ${s.name} - ${s.essence}`})), "Square");
+            populateSelectWithOptions(addChunkShapeSelect, SHAPES.map(shape => ({value: shape.name, text: `${shape.symbol} ${shape.name} - ${shape.essence}`})), "Square");
             populateSelectWithOptions(addChunkColorSelect, COLORS.map(c => ({value: c.name, text: `${c.symbol} ${c.name} - ${c.essence}`})), "White");
         }
         
@@ -615,6 +628,15 @@
 
         // --- Transform and Coordinate Functions ---
         function applyTransform() { if (!transformUpdateQueued) { transformUpdateQueued = true; requestAnimationFrame(() => { transformContainer.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`; svgCanvas.setAttribute('width', String(noteCanvas.scrollWidth)); svgCanvas.setAttribute('height', String(noteCanvas.scrollHeight)); drawConnections(); transformUpdateQueued = false; }); } }
+        function zoomAtPoint(newScale, pointX, pointY) {
+            newScale = Math.max(MIN_SCALE, Math.min(newScale, MAX_SCALE));
+            const worldXBeforeZoom = (pointX - translateX) / scale;
+            const worldYBeforeZoom = (pointY - translateY) / scale;
+            translateX = pointX - worldXBeforeZoom * newScale;
+            translateY = pointY - worldYBeforeZoom * newScale;
+            scale = newScale;
+            applyTransform();
+        }
         function resetAndCenterView() { scale = 1; const viewportWidth = noteCanvasContainer.clientWidth; const viewportHeight = noteCanvasContainer.clientHeight; const canvasContentWidth = noteCanvas.scrollWidth; const canvasContentHeight = noteCanvas.scrollHeight; translateX = (viewportWidth - canvasContentWidth * scale) / 2; translateY = (viewportHeight - canvasContentHeight * scale) / 2; applyTransform(); }
         function screenToWorld(screenX, screenY) { const containerRect = noteCanvasContainer.getBoundingClientRect(); const rectLeft = containerRect.left || 0; const rectTop = containerRect.top || 0; const worldX = (screenX - rectLeft - translateX) / scale; const worldY = (screenY - rectTop - translateY) / scale; return { x: worldX, y: worldY }; }
         function getPointerCoordinates(e) { if (e.touches && e.touches.length > 0) { return { x: e.touches[0].clientX, y: e.touches[0].clientY, count: e.touches.length }; } return { x: e.clientX, y: e.clientY, count: e.buttons === 1 ? 1 : 0 }; }
@@ -1003,7 +1025,72 @@
         }
 
         // --- Interaction Logic (Drag, Resize, Pan, Zoom) ---
-        function onInteractionStart(e) { const isTouchEvent = e.type.startsWith('touch'); if (isTouchEvent && e.touches.length > 1) return; if (isTouchEvent) e.preventDefault(); const pointer = getPointerCoordinates(e); interactionStartX = pointer.x; interactionStartY = pointer.y; if (e.target.classList.contains('resize-handle')) { currentAction = 'resize'; resizingChunk = e.target.closest('.chorus-chunk'); if (!resizingChunk) { currentAction = null; return; } e.stopPropagation(); selectChunk(resizingChunk.id); highestZIndex++; resizingChunk.style.zIndex = String(highestZIndex); const chunkData = chunksMap.get(resizingChunk.id); if(chunkData) chunkData.zIndex = highestZIndex; startX = pointer.x; startY = pointer.y; startWidth = parseFloat(resizingChunk.style.width); startHeight = parseFloat(resizingChunk.style.height); } else if (e.target.closest('.chunk-header')) { if (e.target.closest('.chunk-action-btn')) return; currentAction = 'drag'; draggedChunk = e.target.closest('.chorus-chunk'); if (!draggedChunk) { currentAction = null; return; } e.stopPropagation(); selectChunk(draggedChunk.id); highestZIndex++; draggedChunk.style.zIndex = String(highestZIndex); const chunkData = chunksMap.get(draggedChunk.id); if(chunkData) chunkData.zIndex = highestZIndex; const worldPointer = screenToWorld(pointer.x, pointer.y); offsetX = worldPointer.x - parseFloat(draggedChunk.style.left); offsetY = worldPointer.y - parseFloat(draggedChunk.style.top); } if (currentAction === 'drag' || currentAction === 'resize') { document.addEventListener('mousemove', onInteractionMove); document.addEventListener('mouseup', onInteractionEnd); document.addEventListener('touchmove', onInteractionMove, { passive: false }); document.addEventListener('touchend', onInteractionEnd); } }
+        function onInteractionStart(e) {
+            const isTouchEvent = e.type.startsWith('touch');
+
+            // If in linking mode, we want a tap to complete the link, not start a drag.
+            if (linkingMode) {
+                // On touch devices, sometimes a "tap" doesn't fire a clean click event if there's
+                // a tiny movement, so we handle it on touchstart directly to be more reliable.
+                if (isTouchEvent) {
+                     e.preventDefault();
+                     e.stopPropagation(); // Prevent any other listeners from firing.
+                     const targetChunk = e.target.closest('.chorus-chunk');
+                     if (targetChunk) {
+                        const targetChunkId = targetChunk.id;
+                         if (linkingSourceChunkId && linkingSourceChunkId !== targetChunkId) {
+                            completeLink(linkingSourceChunkId, targetChunkId);
+                        } else if (linkingSourceChunkId === targetChunkId) {
+                            // Tapped on the source chunk again, cancel linking.
+                            if (!e.target.closest('.chunk-action-btn')) {
+                                cancelLinkingMode(false);
+                            }
+                        }
+                     }
+                }
+                // For mouse clicks, we just return and let the `click` event on the chunk handle it.
+                return;
+            }
+            
+            if (isTouchEvent && e.touches.length > 1) return; 
+            if (isTouchEvent) e.preventDefault(); 
+            const pointer = getPointerCoordinates(e); 
+            interactionStartX = pointer.x; 
+            interactionStartY = pointer.y; 
+            if (e.target.classList.contains('resize-handle')) { 
+                currentAction = 'resize'; 
+                resizingChunk = e.target.closest('.chorus-chunk'); 
+                if (!resizingChunk) { currentAction = null; return; } 
+                e.stopPropagation(); 
+                selectChunk(resizingChunk.id); 
+                highestZIndex++; resizingChunk.style.zIndex = String(highestZIndex); 
+                const chunkData = chunksMap.get(resizingChunk.id); 
+                if(chunkData) chunkData.zIndex = highestZIndex; 
+                startX = pointer.x; startY = pointer.y; 
+                startWidth = parseFloat(resizingChunk.style.width); 
+                startHeight = parseFloat(resizingChunk.style.height); 
+            } else if (e.target.closest('.chunk-header')) { 
+                if (e.target.closest('.chunk-action-btn')) return; 
+                currentAction = 'drag'; 
+                draggedChunk = e.target.closest('.chorus-chunk'); 
+                if (!draggedChunk) { currentAction = null; return; } 
+                e.stopPropagation(); 
+                selectChunk(draggedChunk.id); 
+                highestZIndex++; 
+                draggedChunk.style.zIndex = String(highestZIndex); 
+                const chunkData = chunksMap.get(draggedChunk.id); 
+                if(chunkData) chunkData.zIndex = highestZIndex; 
+                const worldPointer = screenToWorld(pointer.x, pointer.y); 
+                offsetX = worldPointer.x - parseFloat(draggedChunk.style.left); 
+                offsetY = worldPointer.y - parseFloat(draggedChunk.style.top); 
+            } 
+            if (currentAction === 'drag' || currentAction === 'resize') { 
+                document.addEventListener('mousemove', onInteractionMove); 
+                document.addEventListener('mouseup', onInteractionEnd); 
+                document.addEventListener('touchmove', onInteractionMove, { passive: false }); 
+                document.addEventListener('touchend', onInteractionEnd); 
+            } 
+        }
         let interactionMoveQueued = false;
         function onInteractionMove(e) { const isTouchEvent = e.type.startsWith('touch'); if (!currentAction) return; if (isTouchEvent) e.preventDefault(); if (interactionMoveQueued) return; interactionMoveQueued = true; requestAnimationFrame(() => { const pointer = getPointerCoordinates(e); if (currentAction === 'drag' && draggedChunk) { const worldPointer = screenToWorld(pointer.x, pointer.y); let newWorldX = worldPointer.x - offsetX; let newWorldY = worldPointer.y - offsetY; const canvasWorldWidth = noteCanvas.scrollWidth; const canvasWorldHeight = noteCanvas.scrollHeight; const chunkWidth = parseFloat(draggedChunk.style.width); const chunkHeight = parseFloat(draggedChunk.style.height); newWorldX = Math.max(0, Math.min(newWorldX, canvasWorldWidth - chunkWidth)); newWorldY = Math.max(0, Math.min(newWorldY, canvasWorldHeight - chunkHeight)); draggedChunk.style.left = newWorldX + 'px'; draggedChunk.style.top = newWorldY + 'px'; drawConnections(); } else if (currentAction === 'resize' && resizingChunk) { const deltaScreenX = pointer.x - startX; const deltaScreenY = pointer.y - startY; let newWidth = startWidth + (deltaScreenX / scale); let newHeight = startHeight + (deltaScreenY / scale); newWidth = Math.max(240, newWidth); newHeight = Math.max(140, newHeight); const chunkCurrentX = parseFloat(resizingChunk.style.left); const chunkCurrentY = parseFloat(resizingChunk.style.top); const canvasWorldWidth = noteCanvas.scrollWidth; const canvasWorldHeight = noteCanvas.scrollHeight; if (chunkCurrentX + newWidth > canvasWorldWidth) newWidth = canvasWorldWidth - chunkCurrentX; if (chunkCurrentY + newHeight > canvasWorldHeight) newHeight = canvasWorldHeight - chunkCurrentY; resizingChunk.style.width = newWidth + 'px'; resizingChunk.style.height = newHeight + 'px'; drawConnections(); } else if (currentAction === 'pan') { translateX = pointer.x - panStartX; translateY = pointer.y - panStartY; applyTransform(); } interactionMoveQueued = false; }); }
         function onInteractionEnd(e) { if (currentAction === 'drag' && draggedChunk) { const chunkData = chunksMap.get(draggedChunk.id); if (chunkData) { chunkData.x = parseFloat(draggedChunk.style.left); chunkData.y = parseFloat(draggedChunk.style.top); } draggedChunk = null; } else if (currentAction === 'resize' && resizingChunk) { const chunkData = chunksMap.get(resizingChunk.id); if (chunkData) { chunkData.width = parseFloat(resizingChunk.style.width); chunkData.height = parseFloat(resizingChunk.style.height); } resizingChunk = null; } else if (currentAction === 'pan') { noteCanvasContainer.classList.remove('panning'); } if (currentAction !== 'pinch-zoom') { currentAction = null; } document.removeEventListener('mousemove', onInteractionMove); document.removeEventListener('mouseup', onInteractionEnd); document.removeEventListener('touchmove', onInteractionMove); document.removeEventListener('touchend', onInteractionEnd); }
@@ -1371,13 +1458,30 @@
             aiActionInternalStateBtn.addEventListener('click', handleExploreInternalState);
             aiActionSuggestEchoBtn.addEventListener('click', handleSuggestEcho);
 
+            // Zoom Listeners
+            const getViewportCenterForZoom = () => {
+                const rect = noteCanvasContainer.getBoundingClientRect();
+                return { x: rect.width / 2, y: rect.height / 2 };
+            };
+            zoomInBtn.addEventListener('click', () => {
+                const center = getViewportCenterForZoom();
+                zoomAtPoint(scale * 1.25, center.x, center.y);
+            });
+            zoomOutBtn.addEventListener('click', () => {
+                const center = getViewportCenterForZoom();
+                zoomAtPoint(scale / 1.25, center.x, center.y);
+            });
+            zoomResetBtn.addEventListener('click', () => {
+                 resetAndCenterView();
+            });
+
             // Canvas and keyboard listeners
             noteCanvasContainer.addEventListener('mousedown', (e) => { if (e.target === noteCanvasContainer || e.target === transformContainer || e.target === noteCanvas) { if (linkingMode) { deselectAllChunks(); return; } currentAction = 'pan'; const pointer = getPointerCoordinates(e); panStartX = pointer.x - translateX; panStartY = pointer.y - translateY; noteCanvasContainer.classList.add('panning'); document.addEventListener('mousemove', onInteractionMove); document.addEventListener('mouseup', onInteractionEnd); } else if (!e.target.closest('.chorus-chunk') && !e.target.closest('.toolbar') && !e.target.closest('.modal')) { deselectAllChunks(); } });
             noteCanvasContainer.addEventListener('touchstart', (e) => { if (e.target === noteCanvasContainer || e.target === transformContainer || e.target === noteCanvas) { if (e.touches.length === 1) { if (linkingMode) { deselectAllChunks(); e.preventDefault(); return; } e.preventDefault(); currentAction = 'pan'; const pointer = getPointerCoordinates(e); panStartX = pointer.x - translateX; panStartY = pointer.y - translateY; noteCanvasContainer.classList.add('panning'); document.addEventListener('touchmove', onInteractionMove, { passive: false }); document.addEventListener('touchend', onInteractionEnd); } else if (e.touches.length === 2) { e.preventDefault(); currentAction = 'pinch-zoom'; noteCanvasContainer.classList.remove('panning'); const t1 = { x: e.touches[0].clientX, y: e.touches[0].clientY }; const t2 = { x: e.touches[1].clientX, y: e.touches[1].clientY }; initialPinchDistance = Math.hypot(t1.x - t2.x, t1.y - t2.y); } }  else if (!e.target.closest('.chorus-chunk') && !e.target.closest('.toolbar') && !e.target.closest('.modal')) { deselectAllChunks(); e.preventDefault(); } }, { passive: false });
-            noteCanvasContainer.addEventListener('wheel', (e) => { e.preventDefault(); const rect = noteCanvasContainer.getBoundingClientRect(); const mouseX = e.clientX - (rect.left || 0); const mouseY = e.clientY - (rect.top || 0); const worldXBeforeZoom = (mouseX - translateX) / scale; const worldYBeforeZoom = (mouseY - translateY) / scale; const delta = e.deltaY * ZOOM_SENSITIVITY * -1; let newScale = scale * (1 + delta); newScale = Math.max(MIN_SCALE, Math.min(newScale, MAX_SCALE)); translateX = mouseX - worldXBeforeZoom * newScale; translateY = mouseY - worldYBeforeZoom * newScale; scale = newScale; applyTransform(); }, { passive: false });
+            noteCanvasContainer.addEventListener('wheel', (e) => { e.preventDefault(); const rect = noteCanvasContainer.getBoundingClientRect(); const mouseX = e.clientX - (rect.left || 0); const mouseY = e.clientY - (rect.top || 0); const delta = e.deltaY * ZOOM_SENSITIVITY * -1; const newScale = scale * (1 + delta); zoomAtPoint(newScale, mouseX, mouseY); }, { passive: false });
             noteCanvasContainer.addEventListener('touchmove', (e) => { if (currentAction === 'pinch-zoom' && e.touches.length === 2) { e.preventDefault(); const t1 = { x: e.touches[0].clientX, y: e.touches[0].clientY }; const t2 = { x: e.touches[1].clientX, y: e.touches[1].clientY }; const currentPinchDistance = Math.hypot(t1.x - t2.x, t1.y - t2.y); const pinchMidpointScreen = { x: (t1.x + t2.x) / 2, y: (t1.y + t2.y) / 2 }; if (initialPinchDistance === null) { initialPinchDistance = currentPinchDistance; return; } const rect = noteCanvasContainer.getBoundingClientRect(); const worldMidXBeforeZoom = (pinchMidpointScreen.x - (rect.left || 0) - translateX) / scale; const worldMidYBeforeZoom = (pinchMidpointScreen.y - (rect.top || 0) - translateY) / scale; let scaleChange = currentPinchDistance / initialPinchDistance; let newScale = scale * scaleChange; newScale = Math.max(MIN_SCALE, Math.min(newScale, MAX_SCALE)); translateX = (pinchMidpointScreen.x - (rect.left || 0)) - worldMidXBeforeZoom * newScale; translateY = (pinchMidpointScreen.y - (rect.top || 0)) - worldMidYBeforeZoom * newScale; scale = newScale; applyTransform(); initialPinchDistance = currentPinchDistance; } }, { passive: false });
             noteCanvasContainer.addEventListener('touchend', (e) => { if (e.touches.length < 2 && currentAction === 'pinch-zoom') { initialPinchDistance = null; currentAction = null; } });
-            document.addEventListener('keydown', (e) => { const activeEl = document.activeElement; const isInputFocused = activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA' || activeEl.isContentEditable); const isCtrlOrCmd = e.ctrlKey || e.metaKey; let shortcutHandled = false; if (isCtrlOrCmd) { switch (e.key.toLowerCase()) { case 's': saveBtn.click(); shortcutHandled = true; break; case 'o': loadBtn.click(); shortcutHandled = true; break; case 'z': if (!undoDeleteBtn.disabled) { undoDeleteBtn.click(); shortcutHandled = true; } break; } } if(shortcutHandled){ e.preventDefault(); return; } if (isInputFocused) { if (e.key === 'Escape') { activeEl.blur(); } return; } switch(e.key){ case 'Escape': if (!addChunkModal.classList.contains('hidden')) { hideModal(addChunkModal); } else if (!editChunkModal.classList.contains('hidden')) { hideModal(editChunkModal); } else if (!helpModal.classList.contains('hidden')) { hideModal(helpModal); } else if (!messageModal.classList.contains('hidden')) { hideModal(messageModal); } else if (!settingsModal.classList.contains('hidden')) { hideModal(settingsModal); } else if (!aiActionModal.classList.contains('hidden')) { hideModal(aiActionModal); } else if (linkingMode) { cancelLinkingMode(false); } else if (selectedChunkId) { deselectAllChunks(); } shortcutHandled = true; break; case 'Delete': case 'Backspace': if (selectedChunkId) { showMessage("Confirm Delete", `Are you sure you want to delete the selected chunk (${chunksMap.get(selectedChunkId)?.chunkTypeTag || 'chunk'})?`, [ { text: 'Cancel', class: 'btn-secondary' }, { text: 'Delete', class: 'btn-danger', action: () => { deleteChunk(selectedChunkId); }} ]); shortcutHandled = true; } break; case 'a': case 'A': addChunkBtn.click(); shortcutHandled = true; break; case '?': case '/': helpBtn.click(); shortcutHandled = true; break; } if(shortcutHandled){ e.preventDefault(); } });
+            document.addEventListener('keydown', (e) => { const activeEl = document.activeElement; const isInputFocused = activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA' || activeEl.isContentEditable); const isCtrlOrCmd = e.ctrlKey || e.metaKey; let shortcutHandled = false; if (isCtrlOrCmd) { switch (e.key.toLowerCase()) { case 's': saveBtn.click(); shortcutHandled = true; break; case 'o': loadBtn.click(); shortcutHandled = true; break; case 'z': if (!undoDeleteBtn.disabled) { undoDeleteBtn.click(); shortcutHandled = true; } break; } } if(shortcutHandled){ e.preventDefault(); return; } if (isInputFocused) { if (e.key === 'Escape') { activeEl.blur(); } return; } switch(e.key){ case 'Escape': if (!addChunkModal.classList.contains('hidden')) { hideModal(addChunkModal); } else if (!editChunkModal.classList.contains('hidden')) { hideModal(editChunkModal); } else if (!helpModal.classList.contains('hidden')) { hideModal(helpModal); } else if (!messageModal.classList.contains('hidden')) { hideModal(messageModal); } else if (!settingsModal.classList.contains('hidden')) { hideModal(settingsModal); } else if (!aiActionModal.classList.contains('hidden')) { hideModal(aiActionModal); } else if (linkingMode) { cancelLinkingMode(false); } else if (selectedChunkId) { deselectAllChunks(); } shortcutHandled = true; break; case 'Delete': case 'Backspace': if (selectedChunkId) { showMessage("Confirm Delete", `Are you sure you want to delete the selected chunk (${chunksMap.get(selectedChunkId)?.chunkTypeTag || 'chunk'})?`, [ { text: 'Cancel', class: 'btn-secondary' }, { text: 'Delete', class: 'btn-danger', action: () => { deleteChunk(selectedChunkId); }} ]); shortcutHandled = true; } break; case 'a': case 'A': addChunkBtn.click(); shortcutHandled = true; break; case '?': case '/': helpBtn.click(); shortcutHandled = true; break; case '+': case '=': zoomInBtn.click(); shortcutHandled = true; break; case '-': case '_': zoomOutBtn.click(); shortcutHandled = true; break; } if(shortcutHandled){ e.preventDefault(); } });
 
             // Final setup
             let resizeQueued = false;
