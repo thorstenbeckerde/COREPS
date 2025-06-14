@@ -241,7 +241,7 @@
 
     <!-- Footer -->
     <footer class="text-center p-2 text-xs text-gray-500 print:hidden">
-        &copy; <span id="copyrightYear"></span> Thorsten Becker. CHORUS: Perceptual Storyteller.
+        &copy; <span class="copyrightYear"></span> <a href="http://thorstenbecker.de" target="_blank" rel="noopener noreferrer" class="hover:underline">Thorsten Becker</a>. CHORUS: Perceptual Storyteller.
     </footer>
 
     <!-- Modals -->
@@ -368,6 +368,9 @@
                     </div>
                     <p class="text-sm">
                         For all other commercial uses, please contact me to arrange for a license: <a href="mailto:hello@thorstenbecker.de" class="text-blue-600 hover:underline">hello@thorstenbecker.de</a>.
+                    </p>
+                    <p class="text-xs text-gray-500 mt-4 text-center">
+                        Copyright &copy; <span class="copyrightYear"></span> <a href="https://thorstenbecker.de" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline">Thorsten Becker</a>. All rights reserved.
                     </p>
                 </div>
                 <div class="help-section">
@@ -1395,7 +1398,10 @@
 
         // --- Initialization Sequence ---
         function initializeApp() {
-            document.getElementById('copyrightYear').textContent = new Date().getFullYear();
+            // Update copyright year in all relevant places
+            document.querySelectorAll('.copyrightYear').forEach(span => {
+                span.textContent = new Date().getFullYear();
+            });
             
             loadApiKey();
             loadCustomChunkTypes(); 
@@ -1482,7 +1488,7 @@
 
             // Canvas and keyboard listeners
             noteCanvasContainer.addEventListener('mousedown', (e) => { if (e.target === noteCanvasContainer || e.target === transformContainer || e.target === noteCanvas) { if (linkingMode) { deselectAllChunks(); return; } currentAction = 'pan'; const pointer = getPointerCoordinates(e); panStartX = pointer.x - translateX; panStartY = pointer.y - translateY; noteCanvasContainer.classList.add('panning'); document.addEventListener('mousemove', onInteractionMove); document.addEventListener('mouseup', onInteractionEnd); } else if (!e.target.closest('.chorus-chunk') && !e.target.closest('.toolbar') && !e.target.closest('.modal')) { deselectAllChunks(); } });
-            noteCanvasContainer.addEventListener('touchstart', (e) => { if (e.target === noteCanvasContainer || e.target === transformContainer || e.target === noteCanvas) { if (e.touches.length === 1) { if (linkingMode) { deselectAllChunks(); e.preventDefault(); return; } e.preventDefault(); currentAction = 'pan'; const pointer = getPointerCoordinates(e); panStartX = pointer.x - translateX; panStartY = pointer.y - translateY; noteCanvasContainer.classList.add('panning'); document.addEventListener('touchmove', onInteractionMove, { passive: false }); document.addEventListener('touchend', onInteractionEnd); } else if (e.touches.length === 2) { e.preventDefault(); currentAction = 'pinch-zoom'; noteCanvasContainer.classList.remove('panning'); const t1 = { x: e.touches[0].clientX, y: e.touches[0].clientY }; const t2 = { x: e.touches[1].clientX, y: e.touches[1].clientY }; initialPinchDistance = Math.hypot(t1.x - t2.x, t1.y - t2.y); } }  else if (!e.target.closest('.chorus-chunk') && !e.target.closest('.toolbar') && !e.target.closest('.modal')) { deselectAllChunks(); e.preventDefault(); } }, { passive: false });
+            noteCanvasContainer.addEventListener('touchstart', (e) => { if (e.target === noteCanvasContainer || e.target === transformContainer || e.target === noteCanvas) { if (e.touches.length === 1) { if (linkingMode) { deselectAllChunks(); e.preventDefault(); return; } e.preventDefault(); currentAction = 'pan'; const pointer = getPointerCoordinates(e); panStartX = pointer.x - translateX; panStartY = pointer.y - translateY; noteCanvasContainer.classList.add('panning'); document.addEventListener('touchmove', onInteractionMove, { passive: false }); document.addEventListener('touchend', onInteractionEnd); } else if (e.touches.length === 2) { e.preventDefault(); currentAction = 'pinch-zoom'; noteCanvasContainer.classList.remove('panning'); const t1 = { x: e.touches[0].clientX, y: e.touches[0].clientY }; const t2 = { x: e.touches[1].clientX, y: e.touches[1].clientY }; initialPinchDistance = Math.hypot(t1.x - t2.x, t1.y - t2.y); } }  else if (!e.target.closest('.chorus-chunk') && !e.target.closest('.toolbar') && !e.target.closest('.modal')) { deselectAllchunks(); e.preventDefault(); } }, { passive: false });
             noteCanvasContainer.addEventListener('wheel', (e) => { e.preventDefault(); const rect = noteCanvasContainer.getBoundingClientRect(); const mouseX = e.clientX - (rect.left || 0); const mouseY = e.clientY - (rect.top || 0); const delta = e.deltaY * ZOOM_SENSITIVITY * -1; const newScale = scale * (1 + delta); zoomAtPoint(newScale, mouseX, mouseY); }, { passive: false });
             noteCanvasContainer.addEventListener('touchmove', (e) => { if (currentAction === 'pinch-zoom' && e.touches.length === 2) { e.preventDefault(); const t1 = { x: e.touches[0].clientX, y: e.touches[0].clientY }; const t2 = { x: e.touches[1].clientX, y: e.touches[1].clientY }; const currentPinchDistance = Math.hypot(t1.x - t2.x, t1.y - t2.y); const pinchMidpointScreen = { x: (t1.x + t2.x) / 2, y: (t1.y + t2.y) / 2 }; if (initialPinchDistance === null) { initialPinchDistance = currentPinchDistance; return; } const rect = noteCanvasContainer.getBoundingClientRect(); const worldMidXBeforeZoom = (pinchMidpointScreen.x - (rect.left || 0) - translateX) / scale; const worldMidYBeforeZoom = (pinchMidpointScreen.y - (rect.top || 0) - translateY) / scale; let scaleChange = currentPinchDistance / initialPinchDistance; let newScale = scale * scaleChange; newScale = Math.max(MIN_SCALE, Math.min(newScale, MAX_SCALE)); translateX = (pinchMidpointScreen.x - (rect.left || 0)) - worldMidXBeforeZoom * newScale; translateY = (pinchMidpointScreen.y - (rect.top || 0)) - worldMidYBeforeZoom * newScale; scale = newScale; applyTransform(); initialPinchDistance = currentPinchDistance; } }, { passive: false });
             noteCanvasContainer.addEventListener('touchend', (e) => { if (e.touches.length < 2 && currentAction === 'pinch-zoom') { initialPinchDistance = null; currentAction = null; } });
