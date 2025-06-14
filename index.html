@@ -150,6 +150,7 @@
         .btn-secondary { background-color: #e5e7eb; color: #374151; }
         .btn-secondary:hover:not(:disabled) { background-color: #d1d5db; }
         .btn-danger { background-color: #dc2626; color: white; }
+        .btn-danger:hover:not(:disabled) { background-color: #b91c1c; }
         .btn-donate { background-color: #ec4899; color: white; }
         .btn-donate:hover { background-color: #db2777; }
         #helpModal .modal-content, #messageModal .modal-content, #unlinkModal .modal-content, #linkEditModal .modal-content, #templatesModal .modal-content, #settingsModal .modal-content, #aiActionModal .modal-content { display: flex; flex-direction: column; max-height: 80vh; }
@@ -170,29 +171,38 @@
         .dropdown-content { display: none; position: absolute; background-color: #f9f9f9; min-width: 160px; box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2); z-index: 100; right: 0; border-radius: 6px; padding: 4px; }
         .dropdown-content button { display: block; width: 100%; text-align: left; padding: 8px 12px; background: none; border: none; cursor: pointer; }
         .dropdown-content button:hover { background-color: #f1f1f1; }
-        .dropdown:hover .dropdown-content { display: block; }
+        .dropdown-content.show { display: block; }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800">
     <div id="appContainer">
         <!-- Toolbar -->
-        <div class="toolbar p-3 bg-white shadow-md flex flex-wrap items-center justify-between gap-2 print:hidden">
-            <div class="flex items-center space-x-2">
+        <div class="toolbar p-3 bg-white shadow-md flex flex-wrap items-center justify-center sm:justify-between gap-x-4 gap-y-2 print:hidden">
+            <!-- Left Group -->
+            <div class="flex items-center flex-wrap justify-center gap-2">
                 <button id="addChunkBtn" class="btn btn-primary" title="Add Chunk (A)">Add Chunk</button>
                 <button id="templatesBtn" class="btn btn-secondary" title="Load a narrative template">Templates</button>
                 <button id="clearCanvasBtn" class="btn btn-danger" title="Clear Canvas">Clear</button>
                 <button id="undoDeleteBtn" class="btn btn-secondary" title="Undo Last Delete (Ctrl/Cmd+Z)" disabled>Undo</button>
             </div>
-            <div class="flex items-center space-x-2">
+
+            <!-- Right Group -->
+            <div class="flex items-center flex-wrap justify-center gap-2">
                 <span id="chunkCountDisplay" class="text-sm text-gray-500 mx-2">Chunks: 0</span>
                  <div class="dropdown">
-                    <button class="btn btn-secondary">Export</button>
-                    <div class="dropdown-content">
+                    <button id="exportBtn" class="btn btn-secondary">Export</button>
+                    <div id="exportDropdownContent" class="dropdown-content">
                         <button id="exportTxtBtn">Simple TXT</button>
                         <button id="exportNarrativeTxtBtn">Narrative TXT</button>
                         <button id="exportJsonBtn">JSON</button>
+                        <hr class="my-1">
                         <button id="exportYarnBtn">Yarn Spinner (.yarn)</button>
                         <button id="exportTweeBtn">Twee (.twee)</button>
+                        <button id="exportInkBtn">Ink (.ink)</button>
+                        <button id="exportRenpyBtn">Ren'Py (.rpy)</button>
+                        <button id="exportI7Btn">Inform 7 (.ni)</button>
+                         <hr class="my-1">
+                        <button id="exportArticyBtn">articy:draft</button>
                     </div>
                 </div>
                 <button id="saveBtn" class="btn btn-secondary" title="Save to File (Ctrl/Cmd+S)">Save</button>
@@ -450,6 +460,10 @@
         const unlinkModal = document.getElementById('unlinkModal'); const unlinkList = document.getElementById('unlinkList'); const closeUnlinkModalBtn = document.getElementById('closeUnlinkModalBtn');
         const exportJsonBtn = document.getElementById('exportJsonBtn'); const exportYarnBtn = document.getElementById('exportYarnBtn'); const exportTweeBtn = document.getElementById('exportTweeBtn'); const exportTxtBtn = document.getElementById('exportTxtBtn');
         const exportNarrativeTxtBtn = document.getElementById('exportNarrativeTxtBtn');
+        const exportInkBtn = document.getElementById('exportInkBtn');
+        const exportRenpyBtn = document.getElementById('exportRenpyBtn');
+        const exportI7Btn = document.getElementById('exportI7Btn');
+        const exportArticyBtn = document.getElementById('exportArticyBtn');
         const linkEditModal = document.getElementById('linkEditModal'); const linkEditTitle = document.getElementById('linkEditTitle'); const linkTypeSelect = document.getElementById('linkTypeSelect'); const linkLabelInput = document.getElementById('linkLabelInput'); const cancelLinkEditBtn = document.getElementById('cancelLinkEditBtn'); const confirmLinkEditBtn = document.getElementById('confirmLinkEditBtn'); const linkSourceIdInput = document.getElementById('linkSourceId'); const linkTargetIdInput = document.getElementById('linkTargetId');
         const saveCanvasAsTemplateBtn = document.getElementById('saveCanvasAsTemplateBtn'); const loadCustomTemplateBtn = document.getElementById('loadCustomTemplateBtn'); const templateLoadInput = document.getElementById('templateLoadInput');
         const settingsBtn = document.getElementById('settingsBtn'); const settingsModal = document.getElementById('settingsModal'); const closeSettingsModalBtn = document.getElementById('closeSettingsModalBtn'); const saveSettingsBtn = document.getElementById('saveSettingsBtn'); const geminiApiKeyInput = document.getElementById('geminiApiKeyInput');
@@ -763,17 +777,36 @@
             const headerTitle = document.createElement('span'); headerTitle.className = 'chunk-header-title';
             const actionsContainer = document.createElement('div'); actionsContainer.className = 'chunk-actions';
             
-            const aiBtn = document.createElement('button'); aiBtn.className = 'chunk-action-btn ai-chunk-btn'; aiBtn.title = 'AI Assistant'; aiBtn.innerHTML = ICON_AI_SPARKLE; aiBtn.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); openAiModal(chunkData.id); });
+            const aiBtn = document.createElement('button');
+            aiBtn.className = 'chunk-action-btn ai-chunk-btn';
+            aiBtn.title = 'AI Assistant';
+            aiBtn.innerHTML = ICON_AI_SPARKLE;
+            const handleAiButtonAction = (e) => { e.preventDefault(); e.stopPropagation(); openAiModal(chunkData.id); };
+            aiBtn.addEventListener('click', handleAiButtonAction);
+            aiBtn.addEventListener('touchend', handleAiButtonAction);
 
-            const editBtn = document.createElement('button'); editBtn.className = 'chunk-action-btn edit-chunk-btn'; editBtn.title = 'Edit Chunk'; editBtn.innerHTML = ICON_PENCIL_EDIT; editBtn.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); openEditChunkModal(chunkData.id); });
+            const editBtn = document.createElement('button');
+            editBtn.className = 'chunk-action-btn edit-chunk-btn';
+            editBtn.title = 'Edit Chunk';
+            editBtn.innerHTML = ICON_PENCIL_EDIT;
+            const handleEditButtonAction = (e) => { e.preventDefault(); e.stopPropagation(); openEditChunkModal(chunkData.id); };
+            editBtn.addEventListener('click', handleEditButtonAction);
+            editBtn.addEventListener('touchend', handleEditButtonAction);
             
-            const linkBtn = document.createElement('button'); linkBtn.className = 'chunk-action-btn link-chunk-btn'; linkBtn.innerHTML = ICON_LINK;
+            const linkBtn = document.createElement('button');
+            linkBtn.className = 'chunk-action-btn link-chunk-btn';
+            linkBtn.innerHTML = ICON_LINK;
             const handleLinkButtonAction = (e) => { e.preventDefault(); e.stopPropagation(); startLinkingMode(chunkData.id); };
-            linkBtn.addEventListener('click', handleLinkButtonAction); linkBtn.addEventListener('touchend', handleLinkButtonAction);
+            linkBtn.addEventListener('click', handleLinkButtonAction);
+            linkBtn.addEventListener('touchend', handleLinkButtonAction);
             
-            const deleteBtn = document.createElement('button'); deleteBtn.className = 'chunk-action-btn delete-chunk-btn'; deleteBtn.title = 'Delete Chunk'; deleteBtn.innerHTML = ICON_DELETE;
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'chunk-action-btn delete-chunk-btn';
+            deleteBtn.title = 'Delete Chunk';
+            deleteBtn.innerHTML = ICON_DELETE;
             const handleDeleteButtonAction = (e) => { e.preventDefault(); e.stopPropagation(); deleteChunk(chunkData.id); };
-            deleteBtn.addEventListener('click', handleDeleteButtonAction); deleteBtn.addEventListener('touchend', handleDeleteButtonAction);
+            deleteBtn.addEventListener('click', handleDeleteButtonAction);
+            deleteBtn.addEventListener('touchend', handleDeleteButtonAction);
             
             actionsContainer.appendChild(aiBtn);
             actionsContainer.appendChild(editBtn); 
@@ -1065,6 +1098,10 @@
                 tempDiv.innerHTML = html.replace(/<br\s*[\/]?>/gi, "\n").replace(/<p>/gi, "").replace(/<\/p>/gi, "\n\n");
                 return (tempDiv.textContent || tempDiv.innerText || "").trim();
             }
+
+            function escapeForRenpy(text) {
+                return text.replace(/"/g, '\\"').replace(/\n/g, '\\n');
+            }
             
             chunks.forEach(chunkData => {
                  const chunkElement = document.getElementById(chunkData.id);
@@ -1081,35 +1118,25 @@
             } else if (format === 'narrative-txt') {
                 fileExt = 'txt';
                 mimeType = 'text/plain;charset=utf-8';
-
                 const formatTypeTagForNarrative = (tag) => {
                     const descriptiveText = tag.replace('#', '').replace(/-/g, ' ');
                     const article = /^[aeiou]/i.test(descriptiveText) ? 'An' : 'A';
                     return `${article} ${descriptiveText}.`;
                 };
-
                 chunks.forEach((chunk, index) => {
                     const shapeInfo = SHAPES.find(s => s.name === chunk.shape) || { essence: 'not specified' };
                     const colorInfo = COLORS.find(c => c.name === chunk.color) || { essence: 'not specified' };
-
                     content += `--- SECTION ${index + 1} (${chunk.chunkTypeTag}) ---\n\n`;
-                    
                     content += `${formatTypeTagForNarrative(chunk.chunkTypeTag)}\n\n`;
-                    
                     content += `${cleanText(chunk.text)}\n\n`;
-
                     content += `(This moment is perceived as a functional '${shapeInfo.essence.toLowerCase()}' with an emotional tone of '${colorInfo.essence.toLowerCase()}'.)\n\n`;
-
                     if (chunk.links && chunk.links.length > 0) {
                         content += 'From here, the story continues:\n';
                         chunk.links.forEach(link => {
                             const target = chunksMap.get(link.targetId);
                             const linkTypeInfo = LINK_TYPES.find(lt => lt.type === link.type) || { label: link.type };
-                            
                             let linkDescription = link.label || linkTypeInfo.label;
-
                             if (target) {
-                                // Find the index of the target chunk for section numbering
                                 const targetIndex = chunks.findIndex(c => c.id === target.id);
                                 if (targetIndex !== -1) {
                                     content += `  - ${linkDescription}. (Continue to SECTION ${targetIndex + 1})\n`;
@@ -1154,6 +1181,70 @@
                     }
                     content += `\n`;
                 });
+            } else if (format === 'ink') {
+                fileExt = 'ink';
+                chunks.forEach(chunk => {
+                    content += `=== ${chunk.id} ===\n`;
+                    content += `${cleanText(chunk.text)}\n`;
+                    if (chunk.links && chunk.links.length > 0) {
+                        chunk.links.forEach(link => {
+                            let linkText = link.label || `Continue (${link.type})`;
+                            content += `* ${linkText} -> ${link.targetId}\n`;
+                        });
+                    } else {
+                        content += '-> END\n';
+                    }
+                     content += `\n`;
+                });
+            } else if (format === 'renpy') {
+                fileExt = 'rpy';
+                content += 'label start:\n';
+                const firstChunk = chunks.find(c => c.links.length > 0 && !chunks.some(other => other.links.some(l => l.targetId === c.id))) || chunks[0];
+                if (firstChunk) {
+                    content += `    jump ${firstChunk.id}\n\n`;
+                }
+
+                chunks.forEach(chunk => {
+                    content += `label ${chunk.id}:\n`;
+                    content += `    " ${escapeForRenpy(cleanText(chunk.text))} "\n`;
+                    if (chunk.links && chunk.links.length > 0) {
+                        content += '    menu:\n';
+                        chunk.links.forEach(link => {
+                            let linkText = escapeForRenpy(link.label || `Continue (${link.type})`);
+                            content += `        "${linkText}":\n`;
+                            content += `            jump ${link.targetId}\n`;
+                        });
+                    } else {
+                        content += '    "The end."\n';
+                        content += '    return\n';
+                    }
+                    content += '\n';
+                });
+            } else if (format === 'i7') {
+                fileExt = 'ni';
+                content = `Volume - CHORUS Export\n\n`;
+                content += `Book - Story\n\n`;
+                
+                chunks.forEach(chunk => {
+                    let roomName = `${chunk.chunkTypeTag.replace('#','')} (${chunk.id.substring(0,5)})`.replace(/-/g, ' ');
+                    content += `"${roomName}" is a room. "${cleanText(chunk.text)}".\n\n`;
+                });
+
+                chunks.forEach(chunk => {
+                     if (chunk.links && chunk.links.length > 0) {
+                         let sourceRoomName = `${chunk.chunkTypeTag.replace('#','')} (${chunk.id.substring(0,5)})`.replace(/-/g, ' ');
+                         chunk.links.forEach(link => {
+                             const targetChunk = chunksMap.get(link.targetId);
+                             if (targetChunk) {
+                                let targetRoomName = `${targetChunk.chunkTypeTag.replace('#','')} (${targetChunk.id.substring(0,5)})`.replace(/-/g, ' ');
+                                let direction = `The path labeled "${link.label || link.type}"`;
+                                content += `${direction} leads to "${targetRoomName}" from "${sourceRoomName}".\n`;
+                             }
+                         });
+                         content += '\n';
+                     }
+                });
+
             } else if (format === 'txt') {
                 fileExt = 'txt';
                 chunks.forEach(chunk => {
@@ -1235,6 +1326,13 @@
             exportTweeBtn.addEventListener('click', () => exportTo('twee'));
             exportTxtBtn.addEventListener('click', () => exportTo('txt'));
             exportNarrativeTxtBtn.addEventListener('click', () => exportTo('narrative-txt'));
+            exportInkBtn.addEventListener('click', () => exportTo('ink'));
+            exportRenpyBtn.addEventListener('click', () => exportTo('renpy'));
+            exportI7Btn.addEventListener('click', () => exportTo('i7'));
+            exportArticyBtn.addEventListener('click', () => {
+                showMessage("articy:draft Export", "Direct export to articy:draft is not supported due to its complex project format. To get your data into articy, you would typically use its API or import an XML/JSON file with a specific structure.<br><br>As an alternative, please use the <strong>JSON export</strong> option. You can then use that JSON data with a custom script to import it into your articy:draft project.");
+            });
+
 
             saveCanvasAsTemplateBtn.addEventListener('click', saveCanvasAsTemplate);
             loadCustomTemplateBtn.addEventListener('click', () => templateLoadInput.click());
@@ -1287,6 +1385,26 @@
             window.dispatchEvent(new Event('resize'));
             resetAndCenterView();
             window.addEventListener('beforeunload', (event) => { if (chunks.length > 0) { event.preventDefault(); event.returnValue = ''; return ''; } });
+            
+            const exportBtn = document.getElementById('exportBtn');
+            const exportDropdownContent = document.getElementById('exportDropdownContent');
+
+            exportBtn.addEventListener('click', (event) => {
+                event.stopPropagation();
+                exportDropdownContent.classList.toggle('show');
+            });
+
+            exportDropdownContent.addEventListener('click', () => {
+                 exportDropdownContent.classList.remove('show');
+            });
+            
+            window.addEventListener('click', (event) => {
+                if (exportDropdownContent.classList.contains('show') && !exportBtn.contains(event.target)) {
+                    exportDropdownContent.classList.remove('show');
+                }
+            });
+
+
             setTimeout(() => { document.getElementById('noteCanvasContainer').focus(); }, 100);
             
             console.log("CHORUS: Perceptual Storyteller Initialized");
