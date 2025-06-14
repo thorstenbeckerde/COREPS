@@ -152,8 +152,6 @@
         .btn-secondary:hover:not(:disabled) { background-color: #d1d5db; }
         .btn-danger { background-color: #dc2626; color: white; }
         .btn-danger:hover:not(:disabled) { background-color: #b91c1c; }
-        .btn-donate { background-color: #ec4899; color: white; }
-        .btn-donate:hover { background-color: #db2777; }
         #helpModal .modal-content, #messageModal .modal-content, #unlinkModal .modal-content, #linkEditModal .modal-content, #templatesModal .modal-content, #settingsModal .modal-content, #aiActionModal .modal-content { display: flex; flex-direction: column; max-height: 80vh; }
         #messageText, #help-scroll-content, #unlinkList, #templateList { max-height: 60vh; overflow-y: auto; padding-right: 1rem;}
         body.linking-mode { cursor: crosshair; }
@@ -221,6 +219,11 @@
                 <button id="loadBtn" class="btn btn-secondary" title="Load from File (Ctrl/Cmd+O)">Load</button>
                 <button id="settingsBtn" class="btn btn-secondary" title="Settings">Settings</button>
                 <button id="helpBtn" class="btn btn-secondary" title="Help (?)">Help</button>
+                <a href="https://ko-fi.com/thorstenbecker" target="_blank" rel="noopener noreferrer" class="btn bg-blue-600 hover:bg-blue-700 text-white !p-2" title="Donate">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd" />
+                    </svg>
+                </a>
             </div>
         </div>
 
@@ -356,8 +359,11 @@
                         CHORUS is free for personal, non-commercial, and educational use. If you are a solo or small indie developer, you are also welcome to use this tool, and a donation would be greatly appreciated.
                     </p>
                     <div class="my-4 flex justify-center">
-                        <a href="https://ko-fi.com/thorstenbecker" target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center px-4 py-2 border border-transparent text-base font-medium rounded-md text-white bg-pink-500 hover:bg-pink-600 shadow-sm">
-                           <span class="mr-2 font-bold text-lg">$</span> Donate via Ko-fi
+                        <a href="https://ko-fi.com/thorstenbecker" target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center px-4 py-2 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 shadow-sm">
+                           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd" />
+                            </svg>
+                           <span>Donate via Ko-fi</span>
                         </a>
                     </div>
                     <p class="text-sm">
