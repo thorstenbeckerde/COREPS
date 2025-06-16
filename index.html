@@ -7,7 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400..700;1,400..700&family=Source+Sans+Pro:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400..700;1,400..700&family=Source+Sans+Pro:wght@400;600;700&family=Gochi+Hand&display=swap" rel="stylesheet">
     <style>
         /* ---
         Creative Redesign Theme Engine
@@ -53,18 +53,18 @@
             --color-border: #dcd0b9;
         }
 
-        /* --- Classic Theme: "Grid" --- */
-        body[data-theme="classic"] {
-            --color-bg-deep-space: #fdfdfd;
+        /* --- Sketch Theme --- */
+        body[data-theme="sketch"] {
+            --color-bg-deep-space: #f5f5f5;
             --color-bg-space: #ffffff;
-            --color-bg-nebula: #e5e7eb;
-            --color-text-primary: #374151;
-            --color-text-secondary: #6b7280;
-            --color-accent-gold: #2563eb;
-            --color-accent-magenta: #dc2626;
-            --color-border: #ccc;
-            --font-main: 'Inter', sans-serif;
-            --font-serif: 'Inter', sans-serif;
+            --color-bg-nebula: #e9e9e9;
+            --color-text-primary: #3d3d3d;
+            --color-text-secondary: #6b6b6b;
+            --color-accent-gold: #ff9800;
+            --color-accent-magenta: #f44336;
+            --color-border: #9e9e9e;
+            --font-main: 'Gochi Hand', cursive;
+            --font-serif: 'Gochi Hand', cursive;
         }
 
 
@@ -99,16 +99,18 @@
             background-color: rgba(22, 36, 71, 0.8);
             backdrop-filter: blur(10px);
             border-bottom: 1px solid var(--color-border);
+            z-index: 20; /* Ensure toolbar is above canvas */
         }
         
         body[data-theme="light"] .toolbar { background-color: rgba(244, 234, 222, 0.8); }
-        body[data-theme="classic"] .toolbar { background-color: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.1); backdrop-filter: none;}
+        body[data-theme="sketch"] .toolbar { background-color: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.1); backdrop-filter: none;}
 
 
         #mainContent {
             position: relative;
             flex-grow: 1;
             overflow: hidden;
+            z-index: 10; /* Ensure canvas is below toolbar */
         }
 
         #noteCanvasContainer {
@@ -132,8 +134,8 @@
         }
 
         #noteCanvas {
-            width: 4000px;
-            height: 3000px;
+            width: 16000px;
+            height: 12000px;
             position: relative;
             background-color: transparent;
         }
@@ -153,11 +155,8 @@
         body[data-theme="light"] #noteCanvas {
             background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAIQSURBVGhD7dlNqhtBFADg5/v9/YIHYEEvEBER4g1sYAELEcECYgEW7LAHEQsiYAE7qCAIsYAJgiCC4P/kZMlMXHZm7szsxPnA0e38VFNVvTq1HwAAAAAAAAAAAAAADATK5TKHw+F9v9/v83q95vP5jFar1Wq328/T6XS00Wj8sA+r1Wq5XO6g3+/3g6/LdDrNh23bNk3TNDmEyGq1ysVisfZ+v18sFkvvG5fLFRqNBgqfEK8kWbZt17oWk4kGg4FgMHg2J/58Pp+u6+p2u6P2+/0eDAbDfr+PzWZDEASL4zjI5XLG4/GQRxAEbTAYNJlMJv9fzhv+1tZrtNbr9Sbrmk2mUgwGg2Kx+LqyniUSCag5y2QyeDxeyyN5d1+sAOA4TqvVWgY+n0+xWKy1h3G/3x8MBkM/C5+A83g8pmk6+Hq95nK5hOu6mqbpyGazhTwej2q12nZ1u12NxxsAAECi0+mYzeZZj8djDodDr9dLo9Hgcrn0ej3NZrMMBAKBxWLRarUGvV4/GwwGEQTBNE2PxyM+nw9d14HjOFQqlXQ67Xb1en1L03QYDAYYDAYYDAaxWEy73W4YDAYYDAaZTCbM5nUWQRDW63VhGIZlmYFpmhRFkcvlRqmEw2ExmUzA8zxFUcRisZDL5f7v+pOFQAAAAAAAAAAAAADg33wA0B6a/XoXARQAAAAASUVORK5CYII=");
         }
-        body[data-theme="classic"] #noteCanvas {
-            background-image:
-                linear-gradient(to right, #d0d0d0 1px, transparent 1px),
-                linear-gradient(to bottom, #d0d0d0 1px, transparent 1px);
-            background-size: 20px 20px;
+        body[data-theme="sketch"] #noteCanvas {
+            background-color: #f5f5f5;
         }
 
 
@@ -191,9 +190,10 @@
              backdrop-filter: none;
         }
         
-        body[data-theme="classic"] .chorus-chunk {
-             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-             border-radius: 8px;
+        body[data-theme="sketch"] .chorus-chunk {
+             box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+             border-radius: 4px 3px 5px 2px;
+             border-width: 2px;
         }
 
 
@@ -208,12 +208,12 @@
              box-shadow: 0 0 15px -2px var(--color-accent-gold), 0 4px 10px rgba(88, 76, 57, 0.3);
         }
 
-        body[data-theme="classic"] .chorus-chunk.selected-chunk {
-            border-width: 2px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        body[data-theme="sketch"] .chorus-chunk.selected-chunk {
+            border-width: 3px;
+            box-shadow: 3px 3px 8px rgba(0,0,0,0.15);
         }
-         body[data-theme="classic"] .chorus-chunk.linking-source-chunk {
-            outline: 2px solid #16a34a;
+         body[data-theme="sketch"] .chorus-chunk.linking-source-chunk {
+            outline: 2px dashed #16a34a;
             border-color: #16a34a;
         }
 
@@ -233,9 +233,10 @@
             transition: color 0.3s, background-color 0.3s;
         }
         
-        body[data-theme="classic"] .chunk-header {
+        body[data-theme="sketch"] .chunk-header {
             padding: 6px 10px;
-            font-weight: 600;
+            font-size: 1.2em;
+            letter-spacing: 0.5px;
         }
 
 
@@ -257,12 +258,15 @@
         @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.2); } }
 
         .chunk-content { flex-grow: 1; padding: 12px; font-size: 0.9rem; overflow-y: auto; outline: none; color: var(--color-text-primary); }
+        body[data-theme="sketch"] .chunk-content { font-size: 1.1em; line-height: 1.5; }
         .chunk-content p { margin-bottom: 0.5em; }
         .resize-handle { width: 16px; height: 16px; background-color: rgba(255,255,255,0.1); position: absolute; right: -2px; bottom: -2px; cursor: se-resize; border-top-left-radius: 8px; z-index: 10; touch-action: none; border: 1px solid var(--color-border); }
-        body[data-theme="classic"] .resize-handle { background-color: #bbb; right: -4px; bottom: -4px; border-top-left-radius: 4px; }
+        body[data-theme="sketch"] .resize-handle { background-color: #bbb; right: -4px; bottom: -4px; border-top-left-radius: 4px; }
         
         .connecting-line { stroke-width: 2.5; fill: none; }
         body[data-theme="dark"] .connecting-line { filter: blur(0.5px); }
+        body[data-theme="sketch"] .connecting-line { filter: url(#sketchy); stroke-width: 2; }
+
 
         .link-type-triggers { /* solid */ }
         .link-type-reveals { stroke-dasharray: 8, 4; }
@@ -270,7 +274,7 @@
         .link-type-contrasts { stroke-dasharray: 12, 4, 4, 4; }
         .arrow-head { }
         .link-label { font-family: 'Lora', serif; font-size: 14px; fill: var(--color-text-primary); text-anchor: middle; dominant-baseline: middle; pointer-events: none; paint-order: stroke; stroke: var(--color-bg-deep-space); stroke-width: 4px; stroke-linecap: butt; stroke-linejoin: miter; }
-        body[data-theme="classic"] .link-label { stroke: none; background-color: rgba(255,255,255,0.7); }
+        body[data-theme="sketch"] .link-label { stroke: none; background-color: rgba(255,255,255,0.7); font-size: 16px; }
 
         .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); backdrop-filter: blur(5px); display: flex; justify-content: center; align-items: center; z-index: 10000; }
         .modal-content { background-color: var(--color-bg-space); padding: 24px; border-radius: 8px; box-shadow: 0 10px 35px rgba(0,0,0,0.5); width: 90%; max-width: 500px; border: 1px solid var(--color-border); color: var(--color-text-primary); }
@@ -287,28 +291,28 @@
         .btn-primary:hover:not(:disabled) { transform: translateY(-1px); }
         body[data-theme="dark"] .btn-primary:hover:not(:disabled) { background-color: #ffdb4d; box-shadow: 0 4px 8px rgba(255, 199, 0, 0.2); }
         body[data-theme="light"] .btn-primary:hover:not(:disabled) { background-color: #d47e3a; box-shadow: 0 4px 8px rgba(192, 108, 39, 0.3); }
-        body[data-theme="classic"] .btn-primary { color: #fff; }
-        body[data-theme="classic"] .btn-primary:hover:not(:disabled) { background-color: #1d4ed8; box-shadow: none; }
+        body[data-theme="sketch"] .btn-primary { color: #fff; }
+        body[data-theme="sketch"] .btn-primary:hover:not(:disabled) { background-color: #fb8c00; box-shadow: none; }
 
 
         .btn-secondary { background-color: var(--color-nebula); color: var(--color-text-primary); border-color: var(--color-border); }
         .btn-secondary:hover:not(:disabled) { transform: translateY(-1px); }
         body[data-theme="dark"] .btn-secondary:hover:not(:disabled) { background-color: #2a528a; border-color: #4a78b5; box-shadow: 0 4px 8px rgba(0,0,0,0.3); }
         body[data-theme="light"] .btn-secondary:hover:not(:disabled) { background-color: #dcd0b9; border-color: #c9bda9; box-shadow: 0 4px 8px rgba(88, 76, 57, 0.2); }
-        body[data-theme="classic"] .btn-secondary:hover:not(:disabled) { background-color: #d1d5db; box-shadow: none; }
+        body[data-theme="sketch"] .btn-secondary:hover:not(:disabled) { background-color: #d1d5db; box-shadow: none; }
 
 
         .btn-danger { background-color: var(--color-accent-magenta); color: white; border-color: var(--color-accent-magenta); }
         .btn-danger:hover:not(:disabled) { transform: translateY(-1px); }
         body[data-theme="dark"] .btn-danger:hover:not(:disabled) { background-color: #fa5a75; box-shadow: 0 4px 8px rgba(228, 63, 90, 0.3); }
         body[data-theme="light"] .btn-danger:hover:not(:disabled) { background-color: #b93a3a; box-shadow: 0 4px 8px rgba(165, 42, 42, 0.3); }
-        body[data-theme="classic"] .btn-danger:hover:not(:disabled) { background-color: #b91c1c; box-shadow: none; }
+        body[data-theme="sketch"] .btn-danger:hover:not(:disabled) { background-color: #c62828; box-shadow: none; }
         
         #helpModal .modal-content, #messageModal .modal-content, #unlinkModal .modal-content, #linkEditModal .modal-content, #templatesModal .modal-content, #settingsModal .modal-content, #aiActionModal .modal-content { display: flex; flex-direction: column; max-height: 80vh; }
         #messageText, #help-scroll-content, #unlinkList, #templateList, #settings-scroll-content { max-height: 60vh; overflow-y: auto; padding-right: 1rem;}
         body.linking-mode { cursor: crosshair; }
         body.linking-mode .chorus-chunk:not(.linking-source-chunk):hover { border-color: var(--color-accent-magenta); }
-        body[data-theme="classic"] body.linking-mode .chorus-chunk:not(.linking-source-chunk):hover { outline: 2px dashed #2563eb; border-color: #ccc; }
+        body[data-theme="sketch"] body.linking-mode .chorus-chunk:not(.linking-source-chunk):hover { outline: 2px dashed var(--color-accent-gold); border-color: var(--color-border); }
         .close-button { color: #aaa; float: right; font-size: 28px; font-weight: bold; line-height: 1; transition: color 0.2s; }
         .close-button:hover, .close-button:focus { color: var(--color-accent-gold); text-decoration: none; cursor: pointer; }
         .help-section { border-bottom: 1px solid var(--color-border); padding-bottom: 12px; margin-bottom: 12px; }
@@ -329,15 +333,40 @@
             background-color: var(--color-nebula);
         }
 
+        /* NEW: Grid and Center Marker Styles */
+        #canvasGrid, #canvasCenterMarker {
+            display: none; /* Hidden by default */
+            pointer-events: none;
+        }
+        body.grid-visible #canvasGrid,
+        body.grid-visible #canvasCenterMarker {
+            display: block;
+        }
+        #gridPattern path {
+            stroke: var(--color-border);
+            stroke-width: 1;
+            fill: none;
+            opacity: 0.5;
+        }
+        body[data-theme="sketch"] #canvasGrid rect {
+            filter: url(#sketchy-grid);
+        }
+        #canvasCenterMarker path {
+            stroke: var(--color-accent-magenta);
+            stroke-width: 2;
+            stroke-dasharray: 4, 4;
+            opacity: 0.8;
+            fill: none;
+        }
+
+
         /* Footer */
         footer { background-color: var(--color-bg-deep-space); border-top: 1px solid var(--color-border); }
     </style>
 </head>
 <body data-theme="light">
     <div id="appContainer">
-        <!-- Toolbar -->
         <div class="toolbar p-3 flex flex-col sm:flex-row items-center justify-center sm:justify-between gap-3 print:hidden">
-            <!-- Left Group -->
             <div class="flex items-center flex-wrap justify-center gap-2">
                 <button id="addChunkBtn" class="btn btn-primary" title="Add Chunk (A)">Add New Idea</button>
                 <button id="templatesBtn" class="btn btn-secondary" title="Load a narrative template">Templates</button>
@@ -345,18 +374,17 @@
                 <button id="undoDeleteBtn" class="btn btn-secondary" title="Undo Last Delete (Ctrl/Cmd+Z)" disabled>Undo</button>
             </div>
 
-            <!-- Center Group (Zoom) -->
             <div class="flex items-center justify-center gap-1">
                  <button id="zoomOutBtn" class="btn btn-secondary !p-2" title="Zoom Out (-)">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M20 12H4" /></svg>
                  </button>
                  <button id="zoomResetBtn" class="btn btn-secondary" title="Reset Zoom (100%)">100%</button>
+                 <button id="centerOnSelectionBtn" class="btn btn-secondary" title="Center on Selection (C)" disabled>Center</button>
                  <button id="zoomInBtn" class="btn btn-secondary !p-2" title="Zoom In (+)">
                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m6-6H6" /></svg>
                  </button>
             </div>
 
-            <!-- Right Group -->
             <div class="flex items-center flex-wrap justify-center gap-2">
                 <span id="chunkCountDisplay" class="text-sm text-gray-400 mx-2">Ideas: 0</span>
                  <div class="dropdown">
@@ -391,7 +419,6 @@
             </div>
         </div>
 
-        <!-- Main Content Area -->
         <div id="mainContent">
             <div id="noteCanvasContainer" tabindex="-1">
                 <div id="transformContainer">
@@ -403,12 +430,10 @@
         </div>
     </div>
 
-    <!-- Footer -->
     <footer class="text-center p-2 text-xs text-gray-500 print:hidden">
         &copy; <span class="copyrightYear"></span> <a href="https://www.thorstenbecker.de" target="_blank" rel="noopener noreferrer" class="hover:underline text-gray-400">Thorsten Becker</a>. CHORUS: Perceptual Storyteller.
     </footer>
 
-    <!-- Modals -->
     <div id="addChunkModal" class="modal hidden">
         <div class="modal-content">
             <span class="close-button" onclick="this.parentElement.parentElement.classList.add('hidden')">&times;</span>
@@ -486,6 +511,13 @@
                     <select id="themeSelect" class="form-select"></select>
                 </div>
                 <div class="mt-4 border-t border-gray-700 pt-4">
+                    <h3 class="font-semibold text-lg mb-2">Canvas Helpers</h3>
+                    <div class="flex items-center justify-between mb-2">
+                        <label for="gridToggle" class="cursor-pointer">Show Canvas Grid</label>
+                        <input type="checkbox" id="gridToggle" class="form-input">
+                    </div>
+                </div>
+                <div class="mt-4 border-t border-gray-700 pt-4">
                     <h3 class="font-semibold text-lg mb-2">Canvas Background</h3>
                     <div class="flex items-center justify-between mb-2">
                         <label for="bgAnimationToggle" class="cursor-pointer">Animated Background</label>
@@ -552,11 +584,13 @@
                     <ul>
                         <li><strong>Theme Selector:</strong> In the Settings (⚙️) modal, you can choose between different visual themes, like "Constellation" (dark), "Parchment" (light), or "Classic Grid" (minimalist).</li>
                         <li><strong>Background Controls:</strong> For themes with animated backgrounds (like Constellation), you can pause the animation or change its speed via sliders in the Settings modal. Your choices are saved locally.</li>
+                        <li><strong>Canvas Grid:</strong> You can toggle a visual grid and a center marker on the canvas via the "Show Canvas Grid" option in Settings. This helps with alignment.</li>
                     </ul>
                 </div>
                 <div class="help-section"><h3>Functional Shapes</h3><ul id="helpShapes"></ul></div>
                 <div class="help-section"><h3>Emotional Colors</h3><ul id="helpColors"></ul></div>
                 <div class="help-section"><h3>Relationship Types</h3><ul id="helpLinkTypes"></ul></div>
+                <div class="help-section"><h3>Keyboard Shortcuts</h3><ul><li><code>C</code>: Center on selected idea</li></ul></div>
                 <div class="help-section"><h3>Chunk Types</h3><ul id="helpCoreChunks"></ul></div>
                 <div class="help-section">
                     <h3>Usage & Licensing</h3>
@@ -667,9 +701,9 @@
         const exportBtn = document.getElementById('exportBtn'); const exportDropdownContent = document.getElementById('exportDropdownContent');
         const linkEditModal = document.getElementById('linkEditModal'); const linkEditTitle = document.getElementById('linkEditTitle'); const linkTypeSelect = document.getElementById('linkTypeSelect'); const linkLabelInput = document.getElementById('linkLabelInput'); const cancelLinkEditBtn = document.getElementById('cancelLinkEditBtn'); const confirmLinkEditBtn = document.getElementById('confirmLinkEditBtn'); const linkSourceIdInput = document.getElementById('linkSourceId'); const linkTargetIdInput = document.getElementById('linkTargetId');
         const saveCanvasAsTemplateBtn = document.getElementById('saveCanvasAsTemplateBtn'); const loadCustomTemplateBtn = document.getElementById('loadCustomTemplateBtn'); const templateLoadInput = document.getElementById('templateLoadInput');
-        const settingsBtn = document.getElementById('settingsBtn'); const settingsModal = document.getElementById('settingsModal'); const closeSettingsModalBtn = document.getElementById('closeSettingsModalBtn'); const saveSettingsBtn = document.getElementById('saveSettingsBtn'); const geminiApiKeyInput = document.getElementById('geminiApiKeyInput'); const bgAnimationToggle = document.getElementById('bgAnimationToggle'); const bgAnimationSpeed = document.getElementById('bgAnimationSpeed'); const themeSelect = document.getElementById('themeSelect');
+        const settingsBtn = document.getElementById('settingsBtn'); const settingsModal = document.getElementById('settingsModal'); const closeSettingsModalBtn = document.getElementById('closeSettingsModalBtn'); const saveSettingsBtn = document.getElementById('saveSettingsBtn'); const geminiApiKeyInput = document.getElementById('geminiApiKeyInput'); const bgAnimationToggle = document.getElementById('bgAnimationToggle'); const bgAnimationSpeed = document.getElementById('bgAnimationSpeed'); const themeSelect = document.getElementById('themeSelect'); const gridToggle = document.getElementById('gridToggle');
         const aiActionModal = document.getElementById('aiActionModal'); const aiActionDeepenBtn = document.getElementById('aiActionDeepenBtn'); const aiActionInternalStateBtn = document.getElementById('aiActionInternalStateBtn'); const aiActionSuggestEchoBtn = document.getElementById('aiActionSuggestEchoBtn');
-        const zoomInBtn = document.getElementById('zoomInBtn'); const zoomOutBtn = document.getElementById('zoomOutBtn'); const zoomResetBtn = document.getElementById('zoomResetBtn');
+        const zoomInBtn = document.getElementById('zoomInBtn'); const zoomOutBtn = document.getElementById('zoomOutBtn'); const zoomResetBtn = document.getElementById('zoomResetBtn'); const centerOnSelectionBtn = document.getElementById('centerOnSelectionBtn');
 
         // --- App State ---
         let chunkTypes = {}; let allChunkTypesList = []; let chunks = []; let chunksMap = new Map();
@@ -769,6 +803,61 @@
             populateHelpModal();
         }
 
+        // --- NEW: Grid and Center Marker ---
+        function createGridAndCenterMarker() {
+            const defs = svgCanvas.querySelector('defs') || document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+            if (!svgCanvas.contains(defs)) {
+                svgCanvas.insertBefore(defs, svgCanvas.firstChild);
+            }
+
+            // Create Grid Pattern if it doesn't exist
+            if (!document.getElementById('gridPattern')) {
+                const gridPattern = document.createElementNS('http://www.w3.org/2000/svg', 'pattern');
+                gridPattern.id = 'gridPattern';
+                gridPattern.setAttribute('width', '100');
+                gridPattern.setAttribute('height', '100');
+                gridPattern.setAttribute('patternUnits', 'userSpaceOnUse');
+
+                const gridPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                gridPath.setAttribute('d', 'M 100 0 L 0 0 0 100');
+                // Styling is done via CSS using var(--color-border) for theme compatibility
+                gridPattern.appendChild(gridPath);
+                defs.appendChild(gridPattern);
+            }
+
+            // Create Grid display element
+            if (!document.getElementById('canvasGrid')) {
+                const gridGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                gridGroup.id = 'canvasGrid';
+                const gridRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                gridRect.setAttribute('width', '100%');
+                gridRect.setAttribute('height', '100%');
+                gridRect.setAttribute('fill', 'url(#gridPattern)');
+                gridGroup.appendChild(gridRect);
+                svgCanvas.appendChild(gridGroup);
+            }
+
+            // Create Center Marker display element
+            if (!document.getElementById('canvasCenterMarker')) {
+                const canvasCenterX = noteCanvas.scrollWidth / 2;
+                const canvasCenterY = noteCanvas.scrollHeight / 2;
+                const markerSize = 100;
+
+                const centerMarkerGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                centerMarkerGroup.id = 'canvasCenterMarker';
+
+                const horizontalLine = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                horizontalLine.setAttribute('d', `M ${canvasCenterX - markerSize} ${canvasCenterY} L ${canvasCenterX + markerSize} ${canvasCenterY}`);
+
+                const verticalLine = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                verticalLine.setAttribute('d', `M ${canvasCenterX} ${canvasCenterY - markerSize} L ${canvasCenterX} ${canvasCenterY + markerSize}`);
+
+                centerMarkerGroup.appendChild(horizontalLine);
+                centerMarkerGroup.appendChild(verticalLine);
+                svgCanvas.appendChild(centerMarkerGroup);
+            }
+        }
+
         // --- Settings Management ---
         function loadSettings() {
             const savedSettings = localStorage.getItem('chorusAppSettings');
@@ -776,7 +865,8 @@
                 geminiApiKey: null,
                 theme: 'light',
                 bgAnimationOn: true,
-                bgAnimationSpeed: 200
+                bgAnimationSpeed: 200,
+                showGrid: false // Changed from showCenterRadius
             };
             // Load API Key
             geminiApiKey = appSettings.geminiApiKey;
@@ -786,12 +876,15 @@
             populateSelectWithOptions(themeSelect, [
                 { value: 'dark', text: 'Constellation (Dark)' },
                 { value: 'light', text: 'Parchment (Light)' },
-                { value: 'classic', text: 'Classic Grid (Minimalist)'}
+                { value: 'sketch', text: 'Sketch (Hand-drawn)'}
             ], appSettings.theme);
             
             // Load Background Settings
             bgAnimationToggle.checked = appSettings.bgAnimationOn;
             bgAnimationSpeed.value = appSettings.bgAnimationSpeed;
+
+            // Load Canvas Helper settings
+            gridToggle.checked = appSettings.showGrid;
             
             applySettings();
         }
@@ -801,6 +894,7 @@
             appSettings.theme = themeSelect.value;
             appSettings.bgAnimationOn = bgAnimationToggle.checked;
             appSettings.bgAnimationSpeed = bgAnimationSpeed.value;
+            appSettings.showGrid = gridToggle.checked; // Changed from showCenterRadius
 
             localStorage.setItem('chorusAppSettings', JSON.stringify(appSettings));
             geminiApiKey = appSettings.geminiApiKey;
@@ -820,6 +914,9 @@
             rootStyle.setProperty('--bg-anim-duration', `${410 - appSettings.bgAnimationSpeed}s`); // Invert range so higher value is faster
             bgAnimationToggle.disabled = !isDark;
             bgAnimationSpeed.disabled = !appSettings.bgAnimationOn || !isDark;
+
+            // Apply canvas helper settings
+            document.body.classList.toggle('grid-visible', appSettings.showGrid);
         }
        
         // --- Template Management ---
@@ -908,7 +1005,26 @@
         function resetAndCenterView() { scale = 1; const viewportWidth = noteCanvasContainer.clientWidth; const viewportHeight = noteCanvasContainer.clientHeight; const canvasContentWidth = noteCanvas.scrollWidth; const canvasContentHeight = noteCanvas.scrollHeight; translateX = (viewportWidth - canvasContentWidth * scale) / 2; translateY = (viewportHeight - canvasContentHeight * scale) / 2; applyTransform(); }
         function screenToWorld(screenX, screenY) { const containerRect = noteCanvasContainer.getBoundingClientRect(); const rectLeft = containerRect.left || 0; const rectTop = containerRect.top || 0; const worldX = (screenX - rectLeft - translateX) / scale; const worldY = (screenY - rectTop - translateY) / scale; return { x: worldX, y: worldY }; }
         function getPointerCoordinates(e) { if (e.touches && e.touches.length > 0) { return { x: e.touches[0].clientX, y: e.touches[0].clientY, count: e.touches.length }; } return { x: e.clientX, y: e.clientY, count: e.buttons === 1 ? 1 : 0 }; }
-        
+        function centerOnChunk(chunkId, setScaleToOne = true) {
+            const chunkData = chunksMap.get(chunkId);
+            if (!chunkData) return;
+
+            if (setScaleToOne) {
+                scale = 1;
+            }
+
+            const viewportWidth = noteCanvasContainer.clientWidth;
+            const viewportHeight = noteCanvasContainer.clientHeight;
+
+            const chunkCenterX = chunkData.x + chunkData.width / 2;
+            const chunkCenterY = chunkData.y + chunkData.height / 2;
+
+            translateX = (viewportWidth / 2) - (chunkCenterX * scale);
+            translateY = (viewportHeight / 2) - (chunkCenterY * scale);
+
+            applyTransform();
+        }
+
         // --- Gemini AI Functions ---
         const originalButtonStates = {};
         function setButtonLoading(button, isLoading) { if (!button) { return; } const buttonId = button.id || `btn-${Math.random()}`; button.id = buttonId; if (isLoading) { if (!originalButtonStates[buttonId]) { originalButtonStates[buttonId] = button.innerHTML; } button.innerHTML = `<svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>`; button.disabled = true; } else { if (originalButtonStates[buttonId] !== undefined) { button.innerHTML = originalButtonStates[buttonId]; delete originalButtonStates[buttonId]; } button.disabled = false; } }
@@ -999,6 +1115,7 @@
                 };
                 const newChunkData = addChunkToCanvas(newChunkDetails, newChunkOptions);
                 addOrUpdateLink(sourceChunkData.id, newChunkData.id, "reveals", "reveals");
+                centerOnChunk(newChunkData.id, true);
                 hideModal(aiActionModal);
                 showMessage("Internal State Explored", "A new idea has been created and linked to represent the character's internal state.");
             }
@@ -1024,6 +1141,7 @@
                 };
                 const newChunkData = addChunkToCanvas(newChunkDetails, newChunkOptions);
                 addOrUpdateLink(sourceChunkData.id, newChunkData.id, "echoes", "echoes");
+                centerOnChunk(newChunkData.id, true);
                 hideModal(aiActionModal);
                 showMessage("Echo Suggested", "A new idea has been created with a thematically linked 'echo' moment.");
             }
@@ -1064,8 +1182,24 @@
             }
         }
         function updateSelectedVisuals() { document.querySelectorAll('.chorus-chunk').forEach(el => { const chunkData = chunksMap.get(el.id); if (!chunkData) return; const isSelected = el.id === selectedChunkId; const isLinkingSource = el.id === linkingSourceChunkId; el.classList.toggle('selected-chunk', isSelected && !linkingMode); el.classList.toggle('linking-source-chunk', isLinkingSource && linkingMode); const linkButton = el.querySelector('.link-chunk-btn'); if (linkButton) { if (isLinkingSource && linkingMode) { linkButton.innerHTML = ICON_LINKING_ACTIVE; linkButton.title = 'Cancel Linking'; linkButton.classList.add('linking-active'); } else { linkButton.innerHTML = ICON_LINK; linkButton.title = 'Add a Relationship'; linkButton.classList.remove('linking-active'); } } }); }
-        function selectChunk(chunkId) { selectedChunkId = chunkId; updateSelectedVisuals(); }
-        function deselectAllChunks() { const wasLinking = linkingMode; if (wasLinking) { cancelLinkingMode(true); } selectedChunkId = null; if (!wasLinking) { updateSelectedVisuals(); } }
+        
+        function selectChunk(chunkId) { 
+            selectedChunkId = chunkId; 
+            updateSelectedVisuals();
+            centerOnSelectionBtn.disabled = false;
+        }
+        function deselectAllChunks() { 
+            const wasLinking = linkingMode; 
+            if (wasLinking) { 
+                cancelLinkingMode(true); 
+            } 
+            selectedChunkId = null; 
+            if (!wasLinking) { 
+                updateSelectedVisuals(); 
+            }
+            centerOnSelectionBtn.disabled = true;
+        }
+
         function createChunkElement(chunkData) {
             const chunkDiv = document.createElement('div');
             chunkDiv.id = chunkData.id; chunkDiv.className = 'chorus-chunk';
@@ -1166,14 +1300,46 @@
         }
         function getIntersectionPointWithRect(rect, internalPoint, externalPoint) { const p1 = internalPoint; const p2 = externalPoint; const dx = p2.x - p1.x; const dy = p2.y - p1.y; if (dx === 0 && dy === 0) return p1; let tMin = Infinity; let intersection = null; const rectRight = rect.x + rect.width; const rectBottom = rect.y + rect.height; if (dx !== 0) { const t = (rect.x - p1.x) / dx; if (t > 1e-6) { const y = p1.y + t * dy; if (y >= rect.y && y <= rectBottom) { if (t < tMin) { tMin = t; intersection = { x: rect.x, y: y }; } } } } if (dx !== 0) { const t = (rectRight - p1.x) / dx; if (t > 1e-6) { const y = p1.y + t * dy; if (y >= rect.y && y <= rectBottom) { if (t < tMin) { tMin = t; intersection = { x: rectRight, y: y }; } } } } if (dy !== 0) { const t = (rect.y - p1.y) / dy; if (t > 1e-6) { const x = p1.x + t * dx; if (x >= rect.x && x <= rectRight) { if (t < tMin) { tMin = t; intersection = { x: x, y: rect.y }; } } } } if (dy !== 0) { const t = (rectBottom - p1.y) / dy; if (t > 1e-6) { const x = p1.x + t * dx; if (x >= rect.x && x <= rectRight) { if (t < tMin) { tMin = t; intersection = { x: x, y: rectBottom }; } } } } return intersection || p1; }
         let svgDefsCreated = false;
-        function ensureSvgDefs() { if (svgDefsCreated) return; const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs'); const marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker'); marker.setAttribute('id', 'arrowhead'); marker.setAttribute('viewBox', '0 0 10 10'); marker.setAttribute('refX', '10'); marker.setAttribute('refY', '5'); marker.setAttribute('markerUnits', 'strokeWidth'); marker.setAttribute('markerWidth', '6'); marker.setAttribute('markerHeight', '5'); marker.setAttribute('orient', 'auto'); const path = document.createElementNS('http://www.w3.org/2000/svg', 'path'); path.setAttribute('d', 'M 0 0 L 10 5 L 0 10 z'); path.classList.add('arrow-head'); marker.appendChild(path); defs.appendChild(marker); svgCanvas.appendChild(defs); svgDefsCreated = true; }
+        function ensureSvgDefs() {
+            if (svgDefsCreated) return;
+            const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+            
+            // Arrowhead Marker
+            const marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
+            marker.setAttribute('id', 'arrowhead'); marker.setAttribute('viewBox', '0 0 10 10');
+            marker.setAttribute('refX', '10'); marker.setAttribute('refY', '5');
+            marker.setAttribute('markerUnits', 'strokeWidth'); marker.setAttribute('markerWidth', '6');
+            marker.setAttribute('markerHeight', '5'); marker.setAttribute('orient', 'auto');
+            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            path.setAttribute('d', 'M 0 0 L 10 5 L 0 10 z'); path.classList.add('arrow-head');
+            marker.appendChild(path);
+            defs.appendChild(marker);
+
+            // Sketchy Filter for lines
+            const sketchyFilter = document.createElementNS('http://www.w3.org/2000/svg', 'filter');
+            sketchyFilter.id = 'sketchy';
+            sketchyFilter.innerHTML = `<feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="1" result="noise" />
+                                     <feDisplacementMap in="SourceGraphic" in2="noise" scale="2" xChannelSelector="R" yChannelSelector="G"/>`;
+            defs.appendChild(sketchyFilter);
+
+            // Sketchy Filter for grid (less intense)
+             const sketchyGridFilter = document.createElementNS('http://www.w3.org/2000/svg', 'filter');
+            sketchyGridFilter.id = 'sketchy-grid';
+            sketchyGridFilter.innerHTML = `<feTurbulence type="fractalNoise" baseFrequency="0.1" numOctaves="1" result="noise" />
+                                         <feDisplacementMap in="SourceGraphic" in2="noise" scale="1" xChannelSelector="R" yChannelSelector="G"/>`;
+            defs.appendChild(sketchyGridFilter);
+
+            svgCanvas.appendChild(defs);
+            svgDefsCreated = true;
+        }
         
         function drawConnections() {
             ensureSvgDefs();
             
             const children = Array.from(svgCanvas.children);
             children.forEach(child => {
-                if (child.tagName.toLowerCase() !== 'defs') {
+                 // Updated condition to preserve grid and marker
+                if (child.tagName.toLowerCase() !== 'defs' && child.id !== 'canvasGrid' && child.id !== 'canvasCenterMarker') {
                     svgCanvas.removeChild(child);
                 }
             });
@@ -1610,7 +1776,7 @@
 
         function renderBoard(loadedChunksData) {
             const existingChunkElements = noteCanvas.querySelectorAll('.chorus-chunk'); existingChunkElements.forEach(el => el.remove());
-            chunks = loadedChunksData || []; chunksMap.clear(); highestZIndex = 0; selectedChunkId = null; lastDeletedChunk = null; undoDeleteBtn.disabled = true; cancelLinkingMode(true);
+            chunks = loadedChunksData || []; chunksMap.clear(); highestZIndex = 0; selectedChunkId = null; lastDeletedChunk = null; undoDeleteBtn.disabled = true; centerOnSelectionBtn.disabled = true; cancelLinkingMode(true);
             if (Array.isArray(chunks)) { chunks.forEach(chunkData => { chunkData.links = chunkData.links || []; if (chunkData && chunkData.id && chunkData.chunkTypeTag) { chunksMap.set(chunkData.id, chunkData); createChunkElement(chunkData); if (chunkData.zIndex > highestZIndex) { highestZIndex = chunkData.zIndex; } } else { console.warn("Skipping invalid chunk data during render:", chunkData); } }); }
             if(chunks.length === 0) highestZIndex = 1;
             updateSelectedVisuals(); drawConnections(); updateChunkCounter();
@@ -1647,6 +1813,9 @@
                 span.textContent = new Date().getFullYear();
             });
             
+            // Create Grid and Center Marker SVG elements
+            createGridAndCenterMarker();
+
             loadSettings();
             loadCustomChunkTypes(); 
             setupTemplateModal(); 
@@ -1690,7 +1859,8 @@
                 const selectedShapeName = addChunkShapeSelect.value;
                 const selectedColorName = addChunkColorSelect.value;
                 if (!selectedType) { showMessage('Error', 'Please make a selection for idea type.'); return; } 
-                addChunkToCanvas({ type: selectedType, shape: selectedShapeName, color: selectedColorName }); 
+                const newChunkData = addChunkToCanvas({ type: selectedType, shape: selectedShapeName, color: selectedColorName }); 
+                centerOnChunk(newChunkData.id, true);
                 hideModal(addChunkModal); 
             });
             cancelEditChunkBtn.addEventListener('click', () => hideModal(editChunkModal));
@@ -1713,6 +1883,11 @@
             
             closeSettingsModalBtn.addEventListener('click', () => hideModal(settingsModal));
             saveSettingsBtn.addEventListener('click', () => { saveSettings(); hideModal(settingsModal); });
+            
+            gridToggle.addEventListener('change', () => {
+                appSettings.showGrid = gridToggle.checked;
+                applySettings();
+            });
             bgAnimationToggle.addEventListener('change', () => {
                 appSettings.bgAnimationOn = bgAnimationToggle.checked;
                 applySettings();
@@ -1734,13 +1909,19 @@
             zoomInBtn.addEventListener('click', () => { const center = getViewportCenterForZoom(); zoomAtPoint(scale * 1.25, center.x, center.y); });
             zoomOutBtn.addEventListener('click', () => { const center = getViewportCenterForZoom(); zoomAtPoint(scale / 1.25, center.x, center.y); });
             zoomResetBtn.addEventListener('click', resetAndCenterView);
+            centerOnSelectionBtn.addEventListener('click', () => {
+                if(selectedChunkId) {
+                    centerOnChunk(selectedChunkId, false);
+                }
+            });
+
 
             noteCanvasContainer.addEventListener('mousedown', (e) => { if (e.target === noteCanvasContainer || e.target === transformContainer || e.target === noteCanvas) { if (linkingMode) { deselectAllChunks(); return; } currentAction = 'pan'; const pointer = getPointerCoordinates(e); panStartX = pointer.x - translateX; panStartY = pointer.y - translateY; noteCanvasContainer.classList.add('panning'); document.addEventListener('mousemove', onInteractionMove); document.addEventListener('mouseup', onInteractionEnd); } else if (!e.target.closest('.chorus-chunk') && !e.target.closest('.toolbar') && !e.target.closest('.modal')) { deselectAllChunks(); } });
             noteCanvasContainer.addEventListener('touchstart', (e) => { if (e.target === noteCanvasContainer || e.target === transformContainer || e.target === noteCanvas) { if (e.touches.length === 1) { if (linkingMode) { deselectAllChunks(); e.preventDefault(); return; } e.preventDefault(); currentAction = 'pan'; const pointer = getPointerCoordinates(e); panStartX = pointer.x - translateX; panStartY = pointer.y - translateY; noteCanvasContainer.classList.add('panning'); document.addEventListener('touchmove', onInteractionMove, { passive: false }); document.addEventListener('touchend', onInteractionEnd); } else if (e.touches.length === 2) { e.preventDefault(); currentAction = 'pinch-zoom'; noteCanvasContainer.classList.remove('panning'); const t1 = { x: e.touches[0].clientX, y: e.touches[0].clientY }; const t2 = { x: e.touches[1].clientX, y: e.touches[1].clientY }; initialPinchDistance = Math.hypot(t1.x - t2.x, t1.y - t2.y); } }  else if (!e.target.closest('.chorus-chunk') && !e.target.closest('.toolbar') && !e.target.closest('.modal')) { deselectAllChunks(); e.preventDefault(); } }, { passive: false });
             noteCanvasContainer.addEventListener('wheel', (e) => { e.preventDefault(); const rect = noteCanvasContainer.getBoundingClientRect(); const mouseX = e.clientX - (rect.left || 0); const mouseY = e.clientY - (rect.top || 0); const delta = e.deltaY * ZOOM_SENSITIVITY * -1; const newScale = scale * (1 + delta); zoomAtPoint(newScale, mouseX, mouseY); }, { passive: false });
             noteCanvasContainer.addEventListener('touchmove', (e) => { if (currentAction === 'pinch-zoom' && e.touches.length === 2) { e.preventDefault(); const t1 = { x: e.touches[0].clientX, y: e.touches[0].clientY }; const t2 = { x: e.touches[1].clientX, y: e.touches[1].clientY }; const currentPinchDistance = Math.hypot(t1.x - t2.x, t1.y - t2.y); const pinchMidpointScreen = { x: (t1.x + t2.x) / 2, y: (t1.y + t2.y) / 2 }; if (initialPinchDistance === null) { initialPinchDistance = currentPinchDistance; return; } const rect = noteCanvasContainer.getBoundingClientRect(); const worldMidXBeforeZoom = (pinchMidpointScreen.x - (rect.left || 0) - translateX) / scale; const worldMidYBeforeZoom = (pinchMidpointScreen.y - (rect.top || 0) - translateY) / scale; let scaleChange = currentPinchDistance / initialPinchDistance; let newScale = scale * scaleChange; newScale = Math.max(MIN_SCALE, Math.min(newScale, MAX_SCALE)); translateX = (pinchMidpointScreen.x - (rect.left || 0)) - worldMidXBeforeZoom * newScale; translateY = (pinchMidpointScreen.y - (rect.top || 0)) - worldMidYBeforeZoom * newScale; scale = newScale; applyTransform(); initialPinchDistance = currentPinchDistance; } }, { passive: false });
             noteCanvasContainer.addEventListener('touchend', (e) => { if (e.touches.length < 2 && currentAction === 'pinch-zoom') { initialPinchDistance = null; currentAction = null; } });
-            document.addEventListener('keydown', (e) => { const activeEl = document.activeElement; const isInputFocused = activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA' || activeEl.isContentEditable); const isCtrlOrCmd = e.ctrlKey || e.metaKey; let shortcutHandled = false; if (isCtrlOrCmd) { switch (e.key.toLowerCase()) { case 's': saveBtn.click(); shortcutHandled = true; break; case 'o': loadBtn.click(); shortcutHandled = true; break; case 'z': if (!undoDeleteBtn.disabled) { undoDeleteBtn.click(); shortcutHandled = true; } break; } } if(shortcutHandled){ e.preventDefault(); return; } if (isInputFocused) { if (e.key === 'Escape') { activeEl.blur(); } return; } switch(e.key){ case 'Escape': if (!addChunkModal.classList.contains('hidden')) { hideModal(addChunkModal); } else if (!editChunkModal.classList.contains('hidden')) { hideModal(editChunkModal); } else if (!helpModal.classList.contains('hidden')) { hideModal(helpModal); } else if (!messageModal.classList.contains('hidden')) { hideModal(messageModal); } else if (!settingsModal.classList.contains('hidden')) { hideModal(settingsModal); } else if (!aiActionModal.classList.contains('hidden')) { hideModal(aiActionModal); } else if (linkingMode) { cancelLinkingMode(false); } else if (selectedChunkId) { deselectAllChunks(); } shortcutHandled = true; break; case 'Delete': case 'Backspace': if (selectedChunkId) { showMessage("Confirm Delete", `Are you sure you want to delete the selected idea (${chunksMap.get(selectedChunkId)?.chunkTypeTag || 'idea'})?`, [ { text: 'Cancel', class: 'btn-secondary' }, { text: 'Delete', class: 'btn-danger', action: () => { deleteChunk(selectedChunkId); }} ]); shortcutHandled = true; } break; case 'a': case 'A': addChunkBtn.click(); shortcutHandled = true; break; case '?': case '/': helpBtn.click(); shortcutHandled = true; break; case '+': case '=': zoomInBtn.click(); shortcutHandled = true; break; case '-': case '_': zoomOutBtn.click(); shortcutHandled = true; break; } if(shortcutHandled){ e.preventDefault(); } });
+            document.addEventListener('keydown', (e) => { const activeEl = document.activeElement; const isInputFocused = activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA' || activeEl.isContentEditable); const isCtrlOrCmd = e.ctrlKey || e.metaKey; let shortcutHandled = false; if (isCtrlOrCmd) { switch (e.key.toLowerCase()) { case 's': saveBtn.click(); shortcutHandled = true; break; case 'o': loadBtn.click(); shortcutHandled = true; break; case 'z': if (!undoDeleteBtn.disabled) { undoDeleteBtn.click(); shortcutHandled = true; } break; } } if(shortcutHandled){ e.preventDefault(); return; } if (isInputFocused) { if (e.key === 'Escape') { activeEl.blur(); } return; } switch(e.key){ case 'Escape': if (!addChunkModal.classList.contains('hidden')) { hideModal(addChunkModal); } else if (!editChunkModal.classList.contains('hidden')) { hideModal(editChunkModal); } else if (!helpModal.classList.contains('hidden')) { hideModal(helpModal); } else if (!messageModal.classList.contains('hidden')) { hideModal(messageModal); } else if (!settingsModal.classList.contains('hidden')) { hideModal(settingsModal); } else if (!aiActionModal.classList.contains('hidden')) { hideModal(aiActionModal); } else if (linkingMode) { cancelLinkingMode(false); } else if (selectedChunkId) { deselectAllChunks(); } shortcutHandled = true; break; case 'Delete': case 'Backspace': if (selectedChunkId) { showMessage("Confirm Delete", `Are you sure you want to delete the selected idea (${chunksMap.get(selectedChunkId)?.chunkTypeTag || 'idea'})?`, [ { text: 'Cancel', class: 'btn-secondary' }, { text: 'Delete', class: 'btn-danger', action: () => { deleteChunk(selectedChunkId); }} ]); shortcutHandled = true; } break; case 'a': case 'A': addChunkBtn.click(); shortcutHandled = true; break; case '?': case '/': helpBtn.click(); shortcutHandled = true; break; case '+': case '=': zoomInBtn.click(); shortcutHandled = true; break; case '-': case '_': zoomOutBtn.click(); shortcutHandled = true; break; case 'c': case 'C': if(!centerOnSelectionBtn.disabled) { centerOnSelectionBtn.click(); shortcutHandled = true; } break; } if(shortcutHandled){ e.preventDefault(); } });
 
             let resizeQueued = false;
             window.addEventListener('resize', () => { if (resizeQueued) return; resizeQueued = true; requestAnimationFrame(() => { const mainContent = document.getElementById('mainContent'); const toolbarElement = document.querySelector('.toolbar'); const footerElement = document.querySelector('footer'); let toolbarHeight = toolbarElement ? toolbarElement.offsetHeight : 0; let footerHeight = footerElement ? footerElement.offsetHeight : 0; if (mainContent) { mainContent.style.height = `calc(100vh - ${toolbarHeight}px - ${footerHeight}px)`; } applyTransform(); resizeQueued = false; }); });
