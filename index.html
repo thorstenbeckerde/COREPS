@@ -646,6 +646,19 @@
             <select id="editChunkShapeSelect" class="form-select"></select>
             <label for="editChunkColorSelect" class="block mb-1 mt-3 font-medium">Emotional Color:</label>
             <select id="editChunkColorSelect" class="form-select"></select>
+			<div class="mt-4 border-t border-gray-700 pt-4">
+				<h3 class="font-semibold mb-2">Ren'Py Assets (Optional)</h3>
+				<p class="text-xs text-gray-500 mb-2">Enter the filenames for assets you will use in your Ren'Py project (e.g., "classroom.png", "yuki_happy.png", "school_theme.mp3").</p>
+				
+				<label for="renpyBgInput" class="block mb-1 mt-3 font-medium">Background Image:</label>
+				<input type="text" id="renpyBgInput" class="form-input" placeholder="e.g., bg_forest.jpg">
+
+				<label for="renpySpriteInput" class="block mb-1 mt-3 font-medium">Character Sprite:</label>
+				<input type="text" id="renpySpriteInput" class="form-input" placeholder="e.g., yuki_happy.png">
+
+				<label for="renpyMusicInput" class="block mb-1 mt-3 font-medium">Music Track:</label>
+				<input type="text" id="renpyMusicInput" class="form-input" placeholder="e.g., main_theme.mp3">
+			</div>
             <div id="editModalActions" class="mt-6 flex justify-end">
                 <button id="cancelEditChunkBtn" class="btn btn-secondary">Cancel</button>
                 <button id="confirmEditChunkBtn" class="btn btn-primary">Save Changes</button>
@@ -755,7 +768,7 @@
                  <div class="help-section">
                     <h3>What is CHORUS Perceptual Storyteller?</h3>
                     <p class="mb-2">This is a tool for mapping stories from an emotional and perceptual perspective. Instead of focusing on plot points, it helps you structure a narrative based on environmental cues, internal feelings, and shifts in a character's perception.</p>
-                    <p>The goal is to visually choreograph the "inner" story—the one of feeling and experience—that drives the external plot.</p>
+                    <p>The goal is to visually choreograph the "inner" story—the one of feeling and experience—that drives the external plot. To learn more about the design philosophy, you can <a href="https://drive.google.com/file/d/1KWDvWfgSN6FeJBGVk96vlVKogXoyNCtd/view?usp=sharing" target="_blank" rel="noopener noreferrer" class="text-blue-400 hover:underline">read the full manifesto here</a>.</p>
                 </div>
                 <div class="help-section">
                     <h3>✨ The Core Method</h3>
@@ -764,9 +777,20 @@
                         <li><strong>Chunks (The "What"):</strong> Self-contained moments of perception, feeling, or thought.</li>
                         <li><strong>Shapes (The "How"):</strong> Defines a chunk's function (Internal, External, Shift, etc.).</li>
                         <li><strong>Colors (The "Feeling"):</strong> Represents the emotional tone (Conflict, Calm, etc.).</li>
-                        <li><strong>Relationships (The "Why"):</strong> Lines show how chunks influence each other (*triggers*, *reveals*, etc.).</li>
+                        <li><strong>Relationships (The "Why"):</strong> Lines show how chunks influence each other, such as cause-and-effect, thematic echoes, or branching choices in a narrative.</li>
                          <li><strong>AI Assistant (The "Spark"):</strong> Use the ✨ icon in any chunk to deepen details, explore internal states, or suggest thematic echoes. Requires a Google AI API key.</li>
                     </ul>
+                </div>
+                <div class="help-section">
+                    <h3>Game Design & Ren'Py Export</h3>
+                    <p class="mb-2">CHORUS PS can function as a powerful pre-production and scripting tool for the free <a href="https://www.renpy.org/" target="_blank" rel="noopener noreferrer" class="text-blue-400 hover:underline">Ren'Py visual novel engine</a>. By adding asset filenames to your chunks, you can export a functional <code>.rpy</code> script file.</p>
+                    <h4>How it Works:</h4>
+                    <ol class="list-decimal ml-5">
+                        <li class="mb-2"><strong>Add Asset Info:</strong> In the "Edit Idea" modal for any chunk, you will find optional fields for "Ren'Py Assets". You can specify a background image, a character sprite, and a music track. Use the exact filenames (e.g., <code>bg_library.png</code>, <code>yuki_sad.png</code>, <code>mystery.mp3</code>).</li>
+                        <li class="mb-2"><strong>Export to Ren'Py:</strong> Use the <code>Export > Ren'Py (.rpy)</code> option to download your story as a script file.</li>
+                        <li class="mb-2"><strong>Set up Ren'Py:</strong> Place your exported <code>.rpy</code> file in the <code>game</code> folder of your Ren'Py project. Make sure your image and music files are placed in the correct subfolders within Ren'Py (e.g., <code>game/images/</code> and <code>game/audio/</code>).</li>
+                        <li class="mb-2"><strong>Include and Play:</strong> In your main <code>script.rpy</code> file, add the line <code>include your_exported_filename.rpy</code> to load and run the story you designed in CHORUS.</li>
+                    </ol>
                 </div>
                  <div class="help-section">
                     <h3>Appearance & Themes</h3>
@@ -1558,7 +1582,17 @@
             populateChunkList();
         }
         function undoDeleteLastChunk() { if (lastDeletedChunk) { if (chunksMap.has(lastDeletedChunk.id)) { showMessage("Undo Failed", "An idea with the same ID already exists. Cannot undo."); lastDeletedChunk = null; undoDeleteBtn.disabled = true; return; } chunks.push(lastDeletedChunk); chunksMap.set(lastDeletedChunk.id, lastDeletedChunk); createChunkElement(lastDeletedChunk); drawConnections(); selectChunk(lastDeletedChunk.id); populateChunkList(); lastDeletedChunk = null; undoDeleteBtn.disabled = true; showMessage("Undo Successful", "The last deleted idea has been restored."); updateChunkCounter(); } else { showMessage("Nothing to Undo", "No idea deletion to undo."); } }
-        function addChunkToCanvas(chunkDetails, options = {}) { const viewportRect = noteCanvasContainer.getBoundingClientRect(); const defaultWorldPos = screenToWorld( (viewportRect.left || 0) + (viewportRect.width || window.innerWidth) / 2, (viewportRect.top || 0) + (viewportRect.height || window.innerHeight) / 4 ); const newChunkData = { id: generateId(), chunkTypeTag: chunkDetails.type.tag, shape: chunkDetails.shape, color: chunkDetails.color, text: options.text || 'New idea...', x: options.x !== undefined ? options.x : Math.max(0, defaultWorldPos.x), y: options.y !== undefined ? options.y : Math.max(0, defaultWorldPos.y), width: options.width || 250, height: options.height || 150, zIndex: ++highestZIndex, links: [] }; chunks.push(newChunkData); chunksMap.set(newChunkData.id, newChunkData); createChunkElement(newChunkData); selectChunk(newChunkData.id); drawConnections(); updateChunkCounter(); populateChunkList(); return newChunkData; }
+        function addChunkToCanvas(chunkDetails, options = {}) { const viewportRect = noteCanvasContainer.getBoundingClientRect(); const defaultWorldPos = screenToWorld( (viewportRect.left || 0) + (viewportRect.width || window.innerWidth) / 2, (viewportRect.top || 0) + (viewportRect.height || window.innerHeight) / 4 ); 
+		const newChunkData = { id: generateId(), chunkTypeTag: chunkDetails.type.tag, shape: chunkDetails.shape, color: chunkDetails.color, text: options.text || 'New idea...', x: options.x !== undefined ? options.x : Math.max(0, defaultWorldPos.x), y: options.y !== undefined ? options.y : Math.max(0, defaultWorldPos.y), width: options.width || 250, height: options.height || 150, zIndex: ++highestZIndex, links: [], renpy_bg: '', renpy_sprite: '', renpy_music: '' };
+		    chunks.push(newChunkData);
+            chunksMap.set(newChunkData.id, newChunkData);
+            createChunkElement(newChunkData);
+            selectChunk(newChunkData.id);
+            drawConnections();
+            updateChunkCounter();
+            populateChunkList();
+            return newChunkData;
+        }
 
         // --- Linking Logic ---
         function startLinkingMode(sourceId) { linkingMode = true; linkingSourceChunkId = sourceId; document.body.classList.add('linking-mode'); selectedChunkId = sourceId; updateSelectedVisuals(); }
@@ -1988,19 +2022,53 @@
                 },
                 'renpy': () => {
                     fileExt = 'rpy';
+                    // Helper to remove file extensions for renpy commands like 'scene' and 'show'
+                    const stripExt = (filename) => filename.split('.').slice(0, -1).join('.') || filename;
+
                     content += 'label start:\n';
-                    const firstChunk = chunks.find(c => c.links.length > 0 && !chunks.some(other => other.links.some(l => l.targetId === c.id))) || chunks[0];
-                    if (firstChunk) { content += `    jump ${firstChunk.id}\n\n`; }
+                    // Find a likely starting chunk (one that isn't a target of another chunk)
+                    const firstChunk = chunks.find(c => !chunks.some(other => other.links && other.links.some(l => l.targetId === c.id))) || chunks[0];
+                    if (firstChunk) { 
+                        content += `    jump ${firstChunk.id}\n\n`; 
+                    } else {
+                        content += '    "Please create some ideas to begin the story."\n    return\n\n';
+                    }
+
                     chunks.forEach(chunk => {
                         content += `label ${chunk.id}:\n`;
-                        content += `    " ${escapeForRenpy(cleanText(chunk.text))} "\n`;
+
+                        // --- NEW: Add asset commands ---
+                        if (chunk.renpy_bg) {
+                            content += `    scene ${stripExt(chunk.renpy_bg)}\n`;
+                        }
+                        if (chunk.renpy_music) {
+                            content += `    play music "audio/${chunk.renpy_music}"\n`;
+                        }
+                        if (chunk.renpy_sprite) {
+                            content += `    show ${stripExt(chunk.renpy_sprite)}\n`;
+                        }
+                        // --- END NEW ---
+
+                        // Add a pause for effect, makes the flow better in-game
+                        if (chunk.renpy_bg || chunk.renpy_sprite) {
+                            content += `    with dissolve\n\n`;
+                        }
+
+                        content += `    "${escapeForRenpy(cleanText(chunk.text))}"\n\n`;
+
                         if (chunk.links && chunk.links.length > 0) {
-                            content += '    menu:\n';
-                            chunk.links.forEach(link => {
-                                let linkText = escapeForRenpy(link.label || `Continue (${link.type})`);
-                                content += `        "${linkText}":\n`;
-                                content += `            jump ${link.targetId}\n`;
-                            });
+                            if (chunk.links.length === 1) {
+                                // If only one link, just jump to it directly.
+                                content += `    jump ${chunk.links[0].targetId}\n`;
+                            } else {
+                                // If multiple links, create a choice menu.
+                                content += '    menu:\n';
+                                chunk.links.forEach(link => {
+                                    let linkText = escapeForRenpy(link.label || `Continue (${link.type})`);
+                                    content += `        "${linkText}":\n`;
+                                    content += `            jump ${link.targetId}\n`;
+                                });
+                            }
                         } else {
                             content += '    "The end."\n';
                             content += '    return\n';
@@ -2086,6 +2154,12 @@
                 openUnlinkModal(chunkData.id);
             };
 
+			// START: ADDED CODE - Populate Ren'Py fields
+			document.getElementById('renpyBgInput').value = chunkData.renpy_bg || '';
+			document.getElementById('renpySpriteInput').value = chunkData.renpy_sprite || '';
+			document.getElementById('renpyMusicInput').value = chunkData.renpy_music || '';
+			// END: ADDED CODE
+
             showModal(editChunkModal);
         }
 
@@ -2165,7 +2239,14 @@
                 hideModal(addChunkModal); 
             });
             cancelEditChunkBtn.addEventListener('click', () => hideModal(editChunkModal));
-            confirmEditChunkBtn.addEventListener('click', () => { const chunkId = editingChunkIdInput.value; const chunkData = chunksMap.get(chunkId); if (!chunkData) return; const newType = allChunkTypesList.find(ct => ct.tag === editChunkTypeSelect.value); const newShapeName = editChunkShapeSelect.value; const newColorName = editChunkColorSelect.value; if (!newType || !newShapeName || !newColorName) { showMessage('Error', 'Invalid selection.'); return; } chunkData.chunkTypeTag = newType.tag; chunkData.shape = newShapeName; chunkData.color = newColorName; updateChunkHeaderDisplay(chunkId); hideModal(editChunkModal); updateSelectedVisuals(); drawConnections(); populateChunkList(); });
+            confirmEditChunkBtn.addEventListener('click', () => { const chunkId = editingChunkIdInput.value; const chunkData = chunksMap.get(chunkId); if (!chunkData) return; const newType = allChunkTypesList.find(ct => ct.tag === editChunkTypeSelect.value); const newShapeName = editChunkShapeSelect.value; const newColorName = editChunkColorSelect.value; if (!newType || !newShapeName || !newColorName) { showMessage('Error', 'Invalid selection.'); return; } chunkData.chunkTypeTag = newType.tag; chunkData.shape = newShapeName; 
+			chunkData.color = newColorName;
+			// START: ADDED CODE - Save Ren'Py asset info
+			chunkData.renpy_bg = document.getElementById('renpyBgInput').value.trim();
+			chunkData.renpy_sprite = document.getElementById('renpySpriteInput').value.trim();
+			chunkData.renpy_music = document.getElementById('renpyMusicInput').value.trim();
+			// END: ADDED CODE
+			updateChunkHeaderDisplay(chunkId); hideModal(editChunkModal); updateSelectedVisuals(); drawConnections(); populateChunkList(); });
             closeHelpBtn.addEventListener('click', () => hideModal(helpModal));
             closeHelpModalSpan.addEventListener('click', () => hideModal(helpModal));
             closeUnlinkModalBtn.addEventListener('click', () => hideModal(unlinkModal));
