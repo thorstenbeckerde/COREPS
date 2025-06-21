@@ -434,7 +434,7 @@
         body[data-theme="final-fantasy"] .btn-donate { background-color: var(--color-accent-gold); border-color: var(--color-accent-gold); } /* Use gold for FF theme */
         body[data-theme="point-and-click"] .btn-donate:hover:not(:disabled) { transform: none; }
 
-        #helpModal .modal-content, #messageModal .modal-content, #unlinkModal .modal-content, #linkEditModal .modal-content, #templatesModal .modal-content, #settingsModal .modal-content, #aiActionModal .modal-content, #donateModal .modal-content { display: flex; flex-direction: column; max-height: 80vh; }
+        #helpModal .modal-content, #messageModal .modal-content, #unlinkModal .modal-content, #linkEditModal .modal-content, #templatesModal .modal-content, #settingsModal .modal-content, #aiActionModal .modal-content, #donateModal .modal-content, #sessionRestoreModal .modal-content { display: flex; flex-direction: column; max-height: 80vh; }
         #messageText, #help-scroll-content, #unlinkList, #templateList, #settings-scroll-content, #chunkListContainer { max-height: 60vh; overflow-y: auto; padding-right: 1rem;}
         body.linking-mode { cursor: crosshair; }
         body.linking-mode .chorus-chunk:not(.linking-source-chunk):hover { border-color: var(--color-accent-magenta); }
@@ -866,6 +866,18 @@
         </div>
     </div>
 
+    <!-- START: New Session Restore Modal -->
+    <div id="sessionRestoreModal" class="modal hidden">
+        <div class="modal-content">
+            <h2 class="font-serif text-xl mb-4">Session Restored</h2>
+            <p class="mb-4">We've restored your previous session from a secure, local browser save.</p>
+            <div class="mt-6 flex justify-end">
+                <button id="restoreStartFreshBtn" class="btn btn-secondary">Start Fresh</button>
+                <button id="restoreContinueBtn" class="btn btn-primary">Continue</button>
+            </div>
+        </div>
+    </div>
+    <!-- END: New Session Restore Modal -->
 
     <input type="file" id="fileLoadInput" class="hidden" accept=".json,application/json">
     <input type="file" id="templateLoadInput" class="hidden" accept=".chtml,application/json">
@@ -874,6 +886,7 @@
     <script>
     document.addEventListener('DOMContentLoaded', () => {
         // --- Constants & Definitions ---
+        const AUTOSAVE_KEY = 'chorusAutoSaveData';
         const DEFAULT_CHUNK_TYPES = {
             perception: [ { tag: "#Sensory-Cue", description: "Something a character sees, hears, smells, etc." }, { tag: "#Environmental-Detail", description: "A feature of the setting or atmosphere." }, { tag: "#Object-Focus", description: "A specific, meaningful object." } ],
             emotion: [ { tag: "#Emotional-Beat", description: "A clear expression of a feeling." }, { tag: "#Internal-Feeling", description: "A character's private, inner emotion." }, { tag: "#Mood-Shift", description: "A change in the emotional atmosphere." } ],
@@ -980,6 +993,11 @@
         const zoomInBtn = document.getElementById('zoomInBtn'); const zoomOutBtn = document.getElementById('zoomOutBtn'); const zoomResetBtn = document.getElementById('zoomResetBtn');
         const chunkListToggleBtn = document.getElementById('chunkListToggleBtn'); const chunkListPanel = document.getElementById('chunkListPanel'); const chunkListContainer = document.getElementById('chunkListContainer');
         const donateBtn = document.getElementById('donateBtn'); const donateModal = document.getElementById('donateModal'); const closeDonateModalBtn = document.getElementById('closeDonateModalBtn'); const closeDonateModalOkBtn = document.getElementById('closeDonateModalOkBtn'); const helpDonateBtn = document.getElementById('helpDonateBtn');
+        // START: New DOM elements for auto-save feature
+        const sessionRestoreModal = document.getElementById('sessionRestoreModal');
+        const restoreContinueBtn = document.getElementById('restoreContinueBtn');
+        const restoreStartFreshBtn = document.getElementById('restoreStartFreshBtn');
+        // END: New DOM elements
 
         // --- App State ---
         let chunkTypes = {}; let allChunkTypesList = []; let chunks = []; let chunksMap = new Map();
@@ -988,6 +1006,57 @@
         let currentAction = null; let panStartX = 0; let panStartY = 0; let initialPinchDistance = null; let transformUpdateQueued = false;
         let geminiApiKey = null; let activeAiChunkId = null;
         let appSettings = {};
+
+        // --- START: Auto-Save Functions ---
+        /**
+         * Saves the entire state of the canvas (chunks and viewport) to the browser's local storage.
+         * This function is the core of the auto-save feature.
+         */
+        function saveStateToLocalStorage() {
+            // A simple guard to prevent saving an empty canvas after clearing, which would
+            // overwrite a potentially valid save from another tab. Instead, we explicitly clear.
+            if (chunks.length === 0) {
+                clearAutoSave();
+                return;
+            }
+
+            try {
+                // First, ensure all text content from contentEditable divs is synced to the data model.
+                chunks.forEach(chunkData => {
+                    const chunkElement = document.getElementById(chunkData.id);
+                    if (chunkElement) {
+                        const contentDiv = chunkElement.querySelector('.chunk-content');
+                        if (contentDiv) {
+                            chunkData.text = contentDiv.innerHTML;
+                        }
+                    }
+                });
+
+                const dataToSave = {
+                    chunks: chunks,
+                    viewport: {
+                        scale: scale,
+                        translateX: translateX,
+                        translateY: translateY
+                    },
+                    timestamp: new Date().toISOString() // Good practice to timestamp saves
+                };
+                localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(dataToSave));
+            } catch (error) {
+                console.error("Auto-save error:", error);
+                // Inform the user if local storage is full or fails.
+                showMessage('Auto-Save Error', `Could not automatically save your work to the browser's local storage. You may be out of space. Error: ${error.message}`);
+            }
+        }
+
+        /**
+         * Removes the auto-saved data from local storage.
+         */
+        function clearAutoSave() {
+            localStorage.removeItem(AUTOSAVE_KEY);
+        }
+        // --- END: Auto-Save Functions ---
+
 
         // --- Utility & Setup Functions ---
         function generateId() { return 'chunk_' + Date.now() + '-' + Math.random().toString(36).substring(2, 9); }
@@ -1233,6 +1302,7 @@
             }
             renderBoard(loadedChunksData);
             populateChunkList();
+            saveStateToLocalStorage();
         }
 
         // --- Transform and Coordinate Functions ---
@@ -1349,6 +1419,7 @@
                 contentDiv.innerHTML = htmlResult; 
                 chunkData.text = htmlResult; 
                 hideModal(aiActionModal);
+                saveStateToLocalStorage();
                 showMessage("Idea Deepened", "The idea's content has been enhanced with sensory details.");
             }
         }
@@ -1566,7 +1637,7 @@
 
             header.appendChild(headerTitle); header.appendChild(actionsContainer);
             const content = document.createElement('div'); content.className = 'chunk-content'; content.contentEditable = true; content.innerHTML = chunkData.text;
-            content.addEventListener('input', () => { const currentChunkData = chunksMap.get(chunkDiv.id); if (currentChunkData) currentChunkData.text = content.innerHTML; });
+            content.addEventListener('input', () => { const currentChunkData = chunksMap.get(chunkDiv.id); if (currentChunkData) currentChunkData.text = content.innerHTML; saveStateToLocalStorage(); });
             content.addEventListener('focus', () => { highestZIndex++; chunkDiv.style.zIndex = String(highestZIndex); const currentChunkData = chunksMap.get(chunkDiv.id); if (currentChunkData) currentChunkData.zIndex = highestZIndex; if (!linkingMode) selectChunk(chunkData.id); });
             content.addEventListener('blur', () => { populateChunkList(); }); // Update list on content change
             const resizeHandle = document.createElement('div'); resizeHandle.className = 'resize-handle'; resizeHandle.addEventListener('mousedown', onInteractionStart); resizeHandle.addEventListener('touchstart', onInteractionStart, { passive: false });
@@ -1592,8 +1663,9 @@
             updateChunkCounter();
             updateSelectedVisuals();
             populateChunkList();
+            saveStateToLocalStorage();
         }
-        function undoDeleteLastChunk() { if (lastDeletedChunk) { if (chunksMap.has(lastDeletedChunk.id)) { showMessage("Undo Failed", "An idea with the same ID already exists. Cannot undo."); lastDeletedChunk = null; undoDeleteBtn.disabled = true; return; } chunks.push(lastDeletedChunk); chunksMap.set(lastDeletedChunk.id, lastDeletedChunk); createChunkElement(lastDeletedChunk); drawConnections(); selectChunk(lastDeletedChunk.id); populateChunkList(); lastDeletedChunk = null; undoDeleteBtn.disabled = true; showMessage("Undo Successful", "The last deleted idea has been restored."); updateChunkCounter(); } else { showMessage("Nothing to Undo", "No idea deletion to undo."); } }
+        function undoDeleteLastChunk() { if (lastDeletedChunk) { if (chunksMap.has(lastDeletedChunk.id)) { showMessage("Undo Failed", "An idea with the same ID already exists. Cannot undo."); lastDeletedChunk = null; undoDeleteBtn.disabled = true; return; } chunks.push(lastDeletedChunk); chunksMap.set(lastDeletedChunk.id, lastDeletedChunk); createChunkElement(lastDeletedChunk); drawConnections(); selectChunk(lastDeletedChunk.id); populateChunkList(); lastDeletedChunk = null; undoDeleteBtn.disabled = true; showMessage("Undo Successful", "The last deleted idea has been restored."); updateChunkCounter(); saveStateToLocalStorage(); } else { showMessage("Nothing to Undo", "No idea deletion to undo."); } }
         function addChunkToCanvas(chunkDetails, options = {}) { const viewportRect = noteCanvasContainer.getBoundingClientRect(); const defaultWorldPos = screenToWorld( (viewportRect.left || 0) + (viewportRect.width || window.innerWidth) / 2, (viewportRect.top || 0) + (viewportRect.height || window.innerHeight) / 4 ); 
 		const newChunkData = { id: generateId(), chunkTypeTag: chunkDetails.type.tag, shape: chunkDetails.shape, color: chunkDetails.color, text: options.text || 'New idea...', x: options.x !== undefined ? options.x : Math.max(0, defaultWorldPos.x), y: options.y !== undefined ? options.y : Math.max(0, defaultWorldPos.y), width: options.width || 250, height: options.height || 150, zIndex: ++highestZIndex, links: [], renpy_bg: '', renpy_sprite: '', renpy_music: '' };
 		    chunks.push(newChunkData);
@@ -1603,6 +1675,7 @@
             drawConnections();
             updateChunkCounter();
             populateChunkList();
+            saveStateToLocalStorage();
             return newChunkData;
         }
 
@@ -1628,6 +1701,7 @@
             }
             drawConnections();
             updateSelectedVisuals();
+            saveStateToLocalStorage();
         }
         function getIntersectionPointWithRect(rect, internalPoint, externalPoint) { const p1 = internalPoint; const p2 = externalPoint; const dx = p2.x - p1.x; const dy = p2.y - p1.y; if (dx === 0 && dy === 0) return p1; let tMin = Infinity; let intersection = null; const rectRight = rect.x + rect.width; const rectBottom = rect.y + rect.height; if (dx !== 0) { const t = (rect.x - p1.x) / dx; if (t > 1e-6) { const y = p1.y + t * dy; if (y >= rect.y && y <= rectBottom) { if (t < tMin) { tMin = t; intersection = { x: rect.x, y: y }; } } } } if (dx !== 0) { const t = (rectRight - p1.x) / dx; if (t > 1e-6) { const y = p1.y + t * dy; if (y >= rect.y && y <= rectBottom) { if (t < tMin) { tMin = t; intersection = { x: rectRight, y: y }; } } } } if (dy !== 0) { const t = (rect.y - p1.y) / dy; if (t > 1e-6) { const x = p1.x + t * dx; if (x >= rect.x && x <= rectRight) { if (t < tMin) { tMin = t; intersection = { x: x, y: rect.y }; } } } } if (dy !== 0) { const t = (rectBottom - p1.y) / dy; if (t > 1e-6) { const x = p1.x + t * dx; if (x >= rect.x && x <= rectRight) { if (t < tMin) { tMin = t; intersection = { x: x, y: rectBottom }; } } } } return intersection || p1; }
         let svgDefsCreated = false;
@@ -1756,6 +1830,7 @@
                         item.remove();
                         drawConnections();
                         updateSelectedVisuals();
+                        saveStateToLocalStorage();
                         if (sourceChunk.links.length === 0) {
                             hideModal(unlinkModal);
                         }
@@ -1850,7 +1925,13 @@
         }
         let interactionMoveQueued = false;
         function onInteractionMove(e) { const isTouchEvent = e.type.startsWith('touch'); if (!currentAction) return; if (isTouchEvent) e.preventDefault(); if (interactionMoveQueued) return; interactionMoveQueued = true; requestAnimationFrame(() => { const pointer = getPointerCoordinates(e); if (currentAction === 'drag' && draggedChunk) { const worldPointer = screenToWorld(pointer.x, pointer.y); let newWorldX = worldPointer.x - offsetX; let newWorldY = worldPointer.y - offsetY; const canvasWorldWidth = noteCanvas.scrollWidth; const canvasWorldHeight = noteCanvas.scrollHeight; const chunkWidth = parseFloat(draggedChunk.style.width); const chunkHeight = parseFloat(draggedChunk.style.height); newWorldX = Math.max(0, Math.min(newWorldX, canvasWorldWidth - chunkWidth)); newWorldY = Math.max(0, Math.min(newWorldY, canvasWorldHeight - chunkHeight)); draggedChunk.style.left = newWorldX + 'px'; draggedChunk.style.top = newWorldY + 'px'; drawConnections(); } else if (currentAction === 'resize' && resizingChunk) { const deltaScreenX = pointer.x - startX; const deltaScreenY = pointer.y - startY; let newWidth = startWidth + (deltaScreenX / scale); let newHeight = startHeight + (deltaScreenY / scale); newWidth = Math.max(250, newWidth); newHeight = Math.max(150, newHeight); const chunkCurrentX = parseFloat(resizingChunk.style.left); const chunkCurrentY = parseFloat(resizingChunk.style.top); const canvasWorldWidth = noteCanvas.scrollWidth; const canvasWorldHeight = noteCanvas.scrollHeight; if (chunkCurrentX + newWidth > canvasWorldWidth) newWidth = canvasWorldWidth - chunkCurrentX; if (chunkCurrentY + newHeight > canvasWorldHeight) newHeight = canvasWorldHeight - chunkCurrentY; resizingChunk.style.width = newWidth + 'px'; resizingChunk.style.height = newHeight + 'px'; drawConnections(); } else if (currentAction === 'pan') { translateX = pointer.x - panStartX; translateY = pointer.y - panStartY; applyTransform(); } interactionMoveQueued = false; }); }
-        function onInteractionEnd(e) { if (currentAction === 'drag' && draggedChunk) { const chunkData = chunksMap.get(draggedChunk.id); if (chunkData) { chunkData.x = parseFloat(draggedChunk.style.left); chunkData.y = parseFloat(draggedChunk.style.top); } draggedChunk = null; } else if (currentAction === 'resize' && resizingChunk) { const chunkData = chunksMap.get(resizingChunk.id); if (chunkData) { chunkData.width = parseFloat(resizingChunk.style.width); chunkData.height = parseFloat(resizingChunk.style.height); } resizingChunk = null; } else if (currentAction === 'pan') { noteCanvasContainer.classList.remove('panning'); } if (currentAction !== 'pinch-zoom') { currentAction = null; } document.removeEventListener('mousemove', onInteractionMove); document.removeEventListener('mouseup', onInteractionEnd); document.removeEventListener('touchmove', onInteractionMove); document.removeEventListener('touchend', onInteractionEnd); }
+        function onInteractionEnd(e) { 
+            if (currentAction === 'drag' && draggedChunk) { const chunkData = chunksMap.get(draggedChunk.id); if (chunkData) { chunkData.x = parseFloat(draggedChunk.style.left); chunkData.y = parseFloat(draggedChunk.style.top); } draggedChunk = null; saveStateToLocalStorage(); } 
+            else if (currentAction === 'resize' && resizingChunk) { const chunkData = chunksMap.get(resizingChunk.id); if (chunkData) { chunkData.width = parseFloat(resizingChunk.style.width); chunkData.height = parseFloat(resizingChunk.style.height); } resizingChunk = null; saveStateToLocalStorage(); } 
+            else if (currentAction === 'pan') { noteCanvasContainer.classList.remove('panning'); saveStateToLocalStorage(); } 
+            if (currentAction !== 'pinch-zoom') { currentAction = null; } 
+            document.removeEventListener('mousemove', onInteractionMove); document.removeEventListener('mouseup', onInteractionEnd); document.removeEventListener('touchmove', onInteractionMove); document.removeEventListener('touchend', onInteractionEnd); 
+        }
         
         // --- Save/Load & Export ---
         function saveCanvasAsTemplate() {
@@ -2177,7 +2258,6 @@
 
         // --- Initialization Sequence ---
         function initializeApp() {
-		    //  START: ADD THE NEW JAVASCRIPT CODE HERE
             function setViewportHeight() {
                 // This calculates the real viewport height and sets it as a CSS variable (--vh)
                 const vh = window.innerHeight * 0.01;
@@ -2188,7 +2268,6 @@
             window.addEventListener('resize', setViewportHeight);
             window.addEventListener('orientationchange', setViewportHeight);
             setViewportHeight(); // Run it once on initial load
-            //  END: ADD THE NEW JAVASCRIPT CODE HERE
             document.querySelectorAll('.copyrightYear').forEach(span => {
                 span.textContent = new Date().getFullYear();
             });
@@ -2203,7 +2282,7 @@
             // Event Listeners
             addChunkBtn.addEventListener('click', () => { if(linkingMode) cancelLinkingMode(false); showModal(addChunkModal); });
             templatesBtn.addEventListener('click', () => showModal(templatesModal));
-            clearCanvasBtn.addEventListener('click', () => { if (linkingMode) cancelLinkingMode(false); if (chunks.length === 0) { showMessage("Canvas Empty", "The canvas is already clear."); return; } showMessage("Confirm Clear", "Are you sure you want to clear the entire canvas? This action cannot be undone.", [ { text: 'Cancel', class: 'btn-secondary' }, { text: 'Clear Canvas', class: 'btn-danger', action: () => { renderBoard([]); showMessage("Canvas Cleared", "All ideas and links have been removed."); }} ]); });
+            clearCanvasBtn.addEventListener('click', () => { if (linkingMode) cancelLinkingMode(false); if (chunks.length === 0) { showMessage("Canvas Empty", "The canvas is already clear."); return; } showMessage("Confirm Clear", "Are you sure you want to clear the entire canvas? This action cannot be undone and will also remove your auto-saved session.", [ { text: 'Cancel', class: 'btn-secondary' }, { text: 'Clear Canvas', class: 'btn-danger', action: () => { renderBoard([]); clearAutoSave(); showMessage("Canvas Cleared", "All ideas and links have been removed."); }} ]); });
             undoDeleteBtn.addEventListener('click', () => { if (linkingMode) cancelLinkingMode(false); undoDeleteLastChunk(); });
             saveBtn.addEventListener('click', saveDataToFile);
             loadBtn.addEventListener('click', () => { if(linkingMode) cancelLinkingMode(false); if (chunks.length > 0) { showMessage("Confirm Load", "Loading a new file will clear any unsaved changes on the current canvas. Are you sure you want to proceed?", [ { text: 'Cancel', class: 'btn-secondary' }, { text: 'Load File', class: 'btn-primary', action: () => fileLoadInput.click() } ]); } else { fileLoadInput.click(); } });
@@ -2258,7 +2337,13 @@
 			chunkData.renpy_sprite = document.getElementById('renpySpriteInput').value.trim();
 			chunkData.renpy_music = document.getElementById('renpyMusicInput').value.trim();
 			// END: ADDED CODE
-			updateChunkHeaderDisplay(chunkId); hideModal(editChunkModal); updateSelectedVisuals(); drawConnections(); populateChunkList(); });
+			updateChunkHeaderDisplay(chunkId); 
+            hideModal(editChunkModal); 
+            updateSelectedVisuals(); 
+            drawConnections(); 
+            populateChunkList(); 
+            saveStateToLocalStorage(); 
+        });
             closeHelpBtn.addEventListener('click', () => hideModal(helpModal));
             closeHelpModalSpan.addEventListener('click', () => hideModal(helpModal));
             closeUnlinkModalBtn.addEventListener('click', () => hideModal(unlinkModal));
@@ -2272,33 +2357,33 @@
                 hideModal(linkEditModal);
                 cancelLinkingMode(false);
             });
-            fileLoadInput.addEventListener('change', (event) => { const file = event.target.files[0]; if (!file) return; if (file.type !== "application/json") { showMessage("Load Error", "Invalid file type. Please select a .json file."); event.target.value = null; return; } const reader = new FileReader(); reader.onload = (e) => { try { const loadedData = JSON.parse(e.target.result); if (loadedData && Array.isArray(loadedData.chunks)) { renderBoard(loadedData.chunks); if (loadedData.viewport) { scale = loadedData.viewport.scale || 1; translateX = loadedData.viewport.translateX || 0; translateY = loadedData.viewport.translateY || 0; applyTransform(); } else { resetAndCenterView(); } showMessage('Loaded from File', `Successfully loaded notes from ${file.name}.`); } else { throw new Error("Invalid file format. Expected 'chunks' array."); } } catch (error) { showMessage('Load Error', `Could not load or parse file: ${error.message}.`); console.error("Load error:", error); } finally { event.target.value = null; } }; reader.onerror = () => { showMessage('Load Error', `Error reading file: ${reader.error}`); event.target.value = null; console.error("File read error:", reader.error); }; reader.readAsText(file); });
+            fileLoadInput.addEventListener('change', (event) => { const file = event.target.files[0]; if (!file) return; if (file.type !== "application/json") { showMessage("Load Error", "Invalid file type. Please select a .json file."); event.target.value = null; return; } const reader = new FileReader(); reader.onload = (e) => { try { const loadedData = JSON.parse(e.target.result); if (loadedData && Array.isArray(loadedData.chunks)) { renderBoard(loadedData.chunks); if (loadedData.viewport) { scale = loadedData.viewport.scale || 1; translateX = loadedData.viewport.translateX || 0; translateY = loadedData.viewport.translateY || 0; applyTransform(); } else { resetAndCenterView(); } showMessage('Loaded from File', `Successfully loaded notes from ${file.name}.`); saveStateToLocalStorage(); } else { throw new Error("Invalid file format. Expected 'chunks' array."); } } catch (error) { showMessage('Load Error', `Could not load or parse file: ${error.message}.`); console.error("Load error:", error); } finally { event.target.value = null; } }; reader.onerror = () => { showMessage('Load Error', `Error reading file: ${reader.error}`); event.target.value = null; console.error("File read error:", reader.error); }; reader.readAsText(file); });
             templateLoadInput.addEventListener('change', (event) => { const file = event.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = (e) => { try { const templateData = JSON.parse(e.target.result); if (templateData && Array.isArray(templateData.chunks)) { showMessage("Confirm Load Template", `This will clear the current canvas. Are you sure you want to load the template "${file.name}"?`, [ { text: 'Cancel', class: 'btn-secondary' }, { text: 'Load Template', class: 'btn-primary', action: () => { loadTemplate(templateData); hideModal(templatesModal); } } ]); } else { throw new Error("Invalid template file format."); } } catch (error) { showMessage('Load Error', `Could not load or parse template file: ${error.message}.`); console.error("Load error:", error); } finally { event.target.value = null; } }; reader.onerror = () => { showMessage('Load Error', `Error reading template file: ${reader.error}`); event.target.value = null; }; reader.readAsText(file); });
             
             closeSettingsModalBtn.addEventListener('click', () => hideModal(settingsModal));
             saveSettingsBtn.addEventListener('click', () => { saveSettings(); hideModal(settingsModal); });
             
             gridToggle.addEventListener('change', () => { appSettings.showGrid = gridToggle.checked; applySettings(); });
-            centerStarToggle.addEventListener('change', () => { appSettings.showCenterStar = centerStarToggle.checked; applySettings(); }); // Listener for new toggle
+            centerStarToggle.addEventListener('change', () => { appSettings.showCenterStar = centerStarToggle.checked; applySettings(); });
             bgAnimationToggle.addEventListener('change', () => { appSettings.bgAnimationOn = bgAnimationToggle.checked; applySettings(); });
             bgAnimationSpeed.addEventListener('input', () => { appSettings.bgAnimationSpeed = bgAnimationSpeed.value; applySettings(); });
             themeSelect.addEventListener('input', () => { appSettings.theme = themeSelect.value; applySettings(); });
 
             aiActionDeepenBtn.addEventListener('click', handleDeepenSensoryDetails);
             aiActionInternalStateBtn.addEventListener('click', handleExploreInternalState);
-            aiActionSuggestEchoBtn.addEventListener('click', handleSuggestEcho);
+			aiActionSuggestEchoBtn.addEventListener('click', handleSuggestEcho);
 
             const getViewportCenterForZoom = () => { const rect = noteCanvasContainer.getBoundingClientRect(); return { x: rect.width / 2, y: rect.height / 2 }; };
             zoomInBtn.addEventListener('click', () => { const center = getViewportCenterForZoom(); zoomAtPoint(scale * 1.25, center.x, center.y); });
-            zoomOutBtn.addEventListener('click', () => { const center = getViewportCenterForZoom(); zoomAtPoint(scale / 1.25, center.x, center.y); });
+            zoomOutBtn.addEventListener('click', () => { const center = getViewportCenterForZoom(); zoomAtPoint(scale / 1.25, center.y); });
             zoomResetBtn.addEventListener('click', resetAndCenterView);
             chunkListToggleBtn.addEventListener('click', toggleChunkList);
 
             noteCanvasContainer.addEventListener('mousedown', (e) => { if (e.target === noteCanvasContainer || e.target === transformContainer || e.target === noteCanvas) { if (linkingMode) { deselectAllChunks(); return; } currentAction = 'pan'; const pointer = getPointerCoordinates(e); panStartX = pointer.x - translateX; panStartY = pointer.y - translateY; noteCanvasContainer.classList.add('panning'); document.addEventListener('mousemove', onInteractionMove); document.addEventListener('mouseup', onInteractionEnd); } else if (!e.target.closest('.chorus-chunk') && !e.target.closest('.toolbar') && !e.target.closest('.modal')) { deselectAllChunks(); } });
             noteCanvasContainer.addEventListener('touchstart', (e) => { if (e.target === noteCanvasContainer || e.target === transformContainer || e.target === noteCanvas) { if (e.touches.length === 1) { if (linkingMode) { deselectAllChunks(); e.preventDefault(); return; } e.preventDefault(); currentAction = 'pan'; const pointer = getPointerCoordinates(e); panStartX = pointer.x - translateX; panStartY = pointer.y - translateY; noteCanvasContainer.classList.add('panning'); document.addEventListener('touchmove', onInteractionMove, { passive: false }); document.addEventListener('touchend', onInteractionEnd); } else if (e.touches.length === 2) { e.preventDefault(); currentAction = 'pinch-zoom'; noteCanvasContainer.classList.remove('panning'); const t1 = { x: e.touches[0].clientX, y: e.touches[0].clientY }; const t2 = { x: e.touches[1].clientX, y: e.touches[1].clientY }; initialPinchDistance = Math.hypot(t1.x - t2.x, t1.y - t2.y); } }  else if (!e.target.closest('.chorus-chunk') && !e.target.closest('.toolbar') && !e.target.closest('.modal')) { deselectAllChunks(); e.preventDefault(); } }, { passive: false });
-            noteCanvasContainer.addEventListener('wheel', (e) => { e.preventDefault(); const rect = noteCanvasContainer.getBoundingClientRect(); const mouseX = e.clientX - (rect.left || 0); const mouseY = e.clientY - (rect.top || 0); const delta = e.deltaY * ZOOM_SENSITIVITY * -1; const newScale = scale * (1 + delta); zoomAtPoint(newScale, mouseX, mouseY); }, { passive: false });
+            noteCanvasContainer.addEventListener('wheel', (e) => { e.preventDefault(); const rect = noteCanvasContainer.getBoundingClientRect(); const mouseX = e.clientX - (rect.left || 0); const mouseY = e.clientY - (rect.top || 0); const delta = e.deltaY * ZOOM_SENSITIVITY * -1; const newScale = scale * (1 + delta); zoomAtPoint(newScale, mouseX, mouseY); saveStateToLocalStorage(); }, { passive: false });
             noteCanvasContainer.addEventListener('touchmove', (e) => { if (currentAction === 'pinch-zoom' && e.touches.length === 2) { e.preventDefault(); const t1 = { x: e.touches[0].clientX, y: e.touches[0].clientY }; const t2 = { x: e.touches[1].clientX, y: e.touches[1].clientY }; const currentPinchDistance = Math.hypot(t1.x - t2.x, t1.y - t2.y); const pinchMidpointScreen = { x: (t1.x + t2.x) / 2, y: (t1.y + t2.y) / 2 }; if (initialPinchDistance === null) { initialPinchDistance = currentPinchDistance; return; } const rect = noteCanvasContainer.getBoundingClientRect(); const worldMidXBeforeZoom = (pinchMidpointScreen.x - (rect.left || 0) - translateX) / scale; const worldMidYBeforeZoom = (pinchMidpointScreen.y - (rect.top || 0) - translateY) / scale; let scaleChange = currentPinchDistance / initialPinchDistance; let newScale = scale * scaleChange; newScale = Math.max(MIN_SCALE, Math.min(newScale, MAX_SCALE)); translateX = (pinchMidpointScreen.x - (rect.left || 0)) - worldMidXBeforeZoom * newScale; translateY = (pinchMidpointScreen.y - (rect.top || 0)) - worldMidYBeforeZoom * newScale; scale = newScale; applyTransform(); initialPinchDistance = currentPinchDistance; } }, { passive: false });
-            noteCanvasContainer.addEventListener('touchend', (e) => { if (e.touches.length < 2 && currentAction === 'pinch-zoom') { initialPinchDistance = null; currentAction = null; } });
+            noteCanvasContainer.addEventListener('touchend', (e) => { if (e.touches.length < 2 && currentAction === 'pinch-zoom') { initialPinchDistance = null; currentAction = null; saveStateToLocalStorage(); } });
             document.addEventListener('keydown', (e) => { const activeEl = document.activeElement; const isInputFocused = activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA' || activeEl.isContentEditable); const isCtrlOrCmd = e.ctrlKey || e.metaKey; let shortcutHandled = false; if (isCtrlOrCmd) { switch (e.key.toLowerCase()) { case 's': saveBtn.click(); shortcutHandled = true; break; case 'o': loadBtn.click(); shortcutHandled = true; break; case 'z': if (!undoDeleteBtn.disabled) { undoDeleteBtn.click(); shortcutHandled = true; } break; } } if(shortcutHandled){ e.preventDefault(); return; } if (isInputFocused) { if (e.key === 'Escape') { activeEl.blur(); } return; } switch(e.key.toLowerCase()){ case 'escape': if (!addChunkModal.classList.contains('hidden')) { hideModal(addChunkModal); } else if (!editChunkModal.classList.contains('hidden')) { hideModal(editChunkModal); } else if (!helpModal.classList.contains('hidden')) { hideModal(helpModal); } else if (!messageModal.classList.contains('hidden')) { hideModal(messageModal); } else if (!settingsModal.classList.contains('hidden')) { hideModal(settingsModal); } else if (!aiActionModal.classList.contains('hidden')) { hideModal(aiActionModal); } else if (!chunkListPanel.classList.contains('hidden')) { toggleChunkList(); } else if (linkingMode) { cancelLinkingMode(false); } else if (selectedChunkId) { deselectAllChunks(); } shortcutHandled = true; break; case 'delete': case 'backspace': if (selectedChunkId) { showMessage("Confirm Delete", `Are you sure you want to delete the selected idea (${chunksMap.get(selectedChunkId)?.chunkTypeTag || 'idea'})?`, [ { text: 'Cancel', class: 'btn-secondary' }, { text: 'Delete', class: 'btn-danger', action: () => { deleteChunk(selectedChunkId); }} ]); shortcutHandled = true; } break; case 'a': addChunkBtn.click(); shortcutHandled = true; break; case '?': case '/': helpBtn.click(); shortcutHandled = true; break; case '+': case '=': zoomInBtn.click(); shortcutHandled = true; break; case '-': case '_': zoomOutBtn.click(); shortcutHandled = true; break; case 'l': chunkListToggleBtn.click(); shortcutHandled = true; break; } if(shortcutHandled){ e.preventDefault(); } });
             
             window.addEventListener('click', (event) => { 
@@ -2310,10 +2395,47 @@
                 }
             });
 
+            // START: New Event Listeners for Session Restore
+            restoreContinueBtn.addEventListener('click', () => hideModal(sessionRestoreModal));
+            restoreStartFreshBtn.addEventListener('click', () => {
+                hideModal(sessionRestoreModal);
+                renderBoard([]); // Clear board
+                clearAutoSave(); // Clear storage
+                showMessage("Canvas Cleared", "Started a fresh session.");
+            });
+            // END: New Event Listeners
+
             let resizeQueued = false;
             window.addEventListener('resize', () => { if (resizeQueued) return; resizeQueued = true; requestAnimationFrame(() => { const mainContent = document.getElementById('mainContent'); const toolbarElement = document.querySelector('.toolbar'); const footerElement = document.querySelector('footer'); let toolbarHeight = toolbarElement ? toolbarElement.offsetHeight : 0; let footerHeight = footerElement ? footerElement.offsetHeight : 0; if (mainContent) { mainContent.style.height = `calc(100vh - ${toolbarHeight}px - ${footerHeight}px)`; } applyTransform(); resizeQueued = false; }); });
             window.dispatchEvent(new Event('resize'));
-            resetAndCenterView();
+            
+            // Check for auto-saved data on initial load
+            const savedDataRaw = localStorage.getItem(AUTOSAVE_KEY);
+            if (savedDataRaw) {
+                try {
+                    const savedData = JSON.parse(savedDataRaw);
+                    if (savedData && Array.isArray(savedData.chunks) && savedData.chunks.length > 0) {
+                        renderBoard(savedData.chunks);
+                        if (savedData.viewport) {
+                            scale = savedData.viewport.scale || 1;
+                            translateX = savedData.viewport.translateX || 0;
+                            translateY = savedData.viewport.translateY || 0;
+                            applyTransform();
+                        } else {
+                            resetAndCenterView();
+                        }
+                        showModal(sessionRestoreModal); // Show the restore modal
+                    } else {
+                        resetAndCenterView();
+                    }
+                } catch (e) {
+                    console.error("Failed to parse auto-saved data:", e);
+                    resetAndCenterView();
+                }
+            } else {
+                 resetAndCenterView();
+            }
+
             window.addEventListener('beforeunload', (event) => { if (chunks.length > 0) { event.preventDefault(); event.returnValue = ''; return ''; } });
             
             setTimeout(() => { document.getElementById('noteCanvasContainer').focus(); }, 100);
