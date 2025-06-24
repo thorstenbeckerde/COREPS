@@ -2012,6 +2012,7 @@
             let content = '';
             let fileExt = '';
             let mimeType = 'text/plain';
+            let fileName = ''; // Variable to hold the final filename
 
             const tempDiv = document.createElement('div');
             function cleanText(html) {
@@ -2213,7 +2214,15 @@
 
             if (exportActions[format]) {
                 exportActions[format]();
-                downloadFile(content, `chorus-export.${fileExt}`, mimeType);
+
+                // Set a default filename first
+                fileName = `chorus-export.${fileExt}`;
+                // Now, create a special case for the narrative text format
+                if (format === 'narrative-txt') {
+                    fileName = `chorus-narrative.${fileExt}`;
+                }
+                
+                downloadFile(content, fileName, mimeType);
             }
         }
 
